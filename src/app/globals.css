@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.no-copy {
+  -webkit-user-select: none; /* Safari用 */
+  -moz-user-select: none;    /* Firefox用 */
+  -ms-user-select: none;     /* IE用 */
+  user-select: none;         /* 標準 */
+}

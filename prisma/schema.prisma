@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ユーザー
+model users {
+  id                 Int                  @id @default(autoincrement())
+  username           String
+  email              String               @unique
+  password           String
+  admin              Boolean              @default(false)
+  products           products[]
+  purchase_histories purchase_histories[]
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+}
+
+// 商品
+model products {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  price              Int                  @default(0)
+  genre              String
+  status             String
+  file_name          String?
+  users              users                @relation(fields: [user_id], references: [id])
+  user_id            Int
+  purchase_histories purchase_histories[]
+  created_at         DateTime             @default(now())
+  updated_at         DateTime             @updatedAt
+  orders             orders[]
+}
+
+// 購入履歴
+model purchase_histories {
+  id          Int      @id @default(autoincrement())
+  total_price Int
+  users       users    @relation(fields: [user_id], references: [id])
+  user_id     Int
+  products    products @relation(fields: [product_id], references: [id])
+  product_id  Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
+// 注文
+model orders {
+  id           Int      @id @default(autoincrement())
+  count        Int      @default(0)
+  products     products @relation(fields: [product_id], references: [id])
+  product_id   Int
+  order_status String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+}
