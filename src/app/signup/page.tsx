@@ -1,5 +1,3 @@
-"use server"
-
 import SignupForm from "../features/auth/components/signup-from"
 
 export default async function SignupPage() {

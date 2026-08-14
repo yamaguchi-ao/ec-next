@@ -5,9 +5,11 @@ import { Button } from "../ui/button";
 import { UserType } from "@/types/types";
 import { redirect } from "next/navigation";
 import { toast } from "../ui/toast";
-import { CircleUser, LogOut, MapPin, Search } from "lucide-react";
+import { CircleUser, LogOut, MapPin, Search, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import logo from "@/public/ecsite-title.png";
+import { Input } from "../ui/input";
+import { ButtonGroup } from "../ui/button-group";
 
 export default function Header({ username, admin }: UserType) {
 
@@ -30,7 +32,7 @@ export default function Header({ username, admin }: UserType) {
     return (
         <header>
             <div className="flex justify-between items-center h-16 bg-olive-700/60 w-full px-4">
-                <Image src={logo} alt="Logo" className="h-15 w-auto invert" />
+                <Image src={logo} alt="Logo" className="h-15 w-auto invert" loading="eager" />
                 {admin ? null :
                     (<>
                         <div className="flex flex-col text-white items-start text-base">
@@ -44,10 +46,12 @@ export default function Header({ username, admin }: UserType) {
                             </div>
                         </div>
                         <div className="flex justify-center items-center">
-                            <input className="bg-white text-black border border-gray-300 rounded-l-md py-2 px-4 w-125" placeholder="検索..." />
-                            <Button className="h-11 px-4" variant="search" onClick={() => { }}>
-                                <Search className="size-7" />
-                            </Button>
+                            <ButtonGroup>
+                                <Input className="bg-white text-black border border-gray-300 py-2 px-4 w-100" placeholder="検索..." />
+                                <Button className="px-5" onClick={() => { }}>
+                                    <Search className="size-7" />
+                                </Button>
+                            </ButtonGroup>
                         </div>
                     </>)}
                 <div className="flex items-center gap-3">
@@ -55,6 +59,7 @@ export default function Header({ username, admin }: UserType) {
                         <p className="text-[12px]">こんにちは</p>
                         <p className="text-[18px]">{username}さん</p>
                     </div>
+                    <ShoppingCart className="invert size-8" />
                     <CircleUser className="invert size-8" />
                     <Button onClick={handleLogout}>
                         ログアウト
