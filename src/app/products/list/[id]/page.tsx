@@ -1,11 +1,11 @@
 import { getCategories } from "@/app/features/products/actions/category-action";
 import { getProduct } from "@/app/features/products/actions/product-action";
-import ProductDetailsForm from "@/app/features/products/components/management/details-form";
+import ProductListDetailsForm from "@/app/features/products/components/list/details-form";
 import Header from "@/components/layout/header";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-export default async function detailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function listDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
     const adminFlg = user?.admin;
     const id = (await params).id;
@@ -18,15 +18,15 @@ export default async function detailsPage({ params }: { params: Promise<{ id: st
     const categoryResult = await getCategories();
     const categories = categoryResult?.data ? categoryResult.data : [];
 
-    if (!adminFlg) {
-        redirect("/products/list");
+    if (adminFlg) {
+        redirect("/dashboard")
     }
 
     return (
         <>
             <title>商品詳細</title>
             <Header username={user?.username!} admin={adminFlg} />
-            <ProductDetailsForm data={product} categories={categories} />
+            <ProductListDetailsForm data={product} categories={categories} />
         </>
     );
 }

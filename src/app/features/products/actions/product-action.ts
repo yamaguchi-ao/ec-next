@@ -1,6 +1,7 @@
 "use server"
 
 import prisma from "@/lib/prisma";
+import { findProduct } from "@/lib/prisma/query";
 import { Prisma } from "@prisma/client";
 import z from "zod"
 
@@ -27,28 +28,28 @@ export async function getProducts(search: string, page?: number) {
         const whereConditions: Prisma.productsWhereInput = {}
 
         if (search) {
-            whereConditions.name = { contains: search }
+            whereConditions.AND = [
+                {
+                    OR: [
+                        {
+                            name: {
+                                contains: search
+                            }
+                        },
+                        {
+                            category: {
+                                name: {
+                                    contains: search
+                                }
+                            }
+                        },
+                    ],
+
+                }
+            ]
         }
 
-        const products = await prisma.products.findMany({
-            where: whereConditions,
-            skip: offset,
-            take: limit,
-            select: {
-                id: true,
-                name: true,
-                category: {
-                    select: {
-                        name: true
-                    }
-                },
-                price: true,
-                count: true,
-                is_on_sale: true,
-                created_at: true,
-                updated_at: true
-            }
-        });
+        const products = await findProduct({ whereInput: whereConditions, offset, limit });
 
         if (!products) {
             return { success: false, message: "商品が存在しません。" }

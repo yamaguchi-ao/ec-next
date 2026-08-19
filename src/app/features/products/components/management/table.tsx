@@ -41,6 +41,13 @@ export default function ListTable() {
         });
     }
 
+    // ダイアログ開く用
+    function handleOpenDialog(selectedId: string, event: React.MouseEvent<HTMLDivElement>) {
+        event?.preventDefault();
+        setSelectedId(selectedId);
+        setIsDialogOpen(true);
+    }
+
     return (
         <>
             <ScrollArea className="h-[calc(100vh-18rem)] rounded-lg border">
@@ -70,16 +77,12 @@ export default function ListTable() {
                                                     <MoreHorizontalIcon />
                                                     <span className="sr-only">Open menu</span></Button>} />
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem className="hover:cursor-pointer" onClick={() => { handleEdit(item.id!) }}>
+                                                <DropdownMenuItem className="hover:cursor-pointer" onClick={() => handleEdit(item.id!)}>
                                                     <Pencil />
                                                     編集
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator className="bg-gray-400/30" />
-                                                <DropdownMenuItem className="hover:cursor-pointer" variant="destructive" onClick={(event) => {
-                                                    event.preventDefault();
-                                                    setSelectedId(item.id!);
-                                                    setIsDialogOpen(true);
-                                                }}>
+                                                <DropdownMenuItem className="hover:cursor-pointer" variant="destructive" onClick={(event) => handleOpenDialog(item.id!, event)}>
                                                     <Trash2 />削除
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
