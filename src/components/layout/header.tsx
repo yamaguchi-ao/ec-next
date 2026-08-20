@@ -8,10 +8,23 @@ import { toast } from "../ui/toast";
 import { CircleUser, LogOut, MapPin, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import logo from "@/public/ecsite-title.png";
+import { useEffect, useState } from "react";
+import { getCart } from "@/app/features/carts/actions/cart-action";
 
 export default function Header({ username, admin }: UserType) {
 
     const router = useRouter();
+    const [cartItemsCount, setCartItemsCount] = useState(0);
+
+    useEffect(() => {
+        async function getCartItems() {
+            const result = await getCart();
+            if (result.success) {
+                setCartItemsCount(result.data?.items.length ?? 0);
+            }
+        }
+        getCartItems();
+    }, [])
 
     async function handleLogout() {
         const result = await logoutAction();
@@ -53,7 +66,15 @@ export default function Header({ username, admin }: UserType) {
                         <p className="text-[12px]">こんにちは</p>
                         <p className="text-[18px]">{username}さん</p>
                     </div>
-                    <ShoppingCart className="invert size-8 hover:cursor-pointer" />
+                    <div className="relative">
+                        <ShoppingCart className="invert size-8 hover:cursor-pointer" onClick={() => router.push("/cart")} />
+                        {cartItemsCount > 0 && (
+                            <span className="absolute top-0 right-0 flex min-w-4 origin-center translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-destructive px-1 text-white text-xs">
+                                {cartItemsCount}
+                            </span>
+                        )}
+                    </div>
+
                     <CircleUser className="invert size-8" />
                     <Button onClick={handleLogout}>
                         ログアウト

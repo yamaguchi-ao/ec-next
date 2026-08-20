@@ -37,6 +37,6 @@ export const config = {
         '/products/:path*',
         '/users/:path*',
         '/dashboard/:path*',
-        '/((?!api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!signup|api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ]
 }
