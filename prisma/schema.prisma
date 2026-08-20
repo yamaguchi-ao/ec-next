@@ -13,52 +13,93 @@ datasource db {
 
 // ユーザー
 model users {
-  id                 Int                  @id @default(autoincrement())
-  username           String
-  email              String               @unique
-  password           String
-  admin              Boolean              @default(false)
-  products           products[]
-  purchase_histories purchase_histories[]
-  created_at         DateTime             @default(now())
-  updated_at         DateTime             @updatedAt
+  id         Int       @id @default(autoincrement())
+  username   String
+  email      String    @unique
+  password   String
+  admin      Boolean   @default(false)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  orders     orders[]
+  address    address[]
+}
+
+model address {
+  id         String   @id @default(cuid())
+  post_code  String
+  address1   String
+  address2   String?
+  phone      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user_id    Int
+  users      users    @relation(fields: [user_id], references: [id])
 }
 
 // 商品
 model products {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  price              Int                  @default(0)
-  genre              String
-  status             String
-  file_name          String?
-  users              users                @relation(fields: [user_id], references: [id])
-  user_id            Int
-  purchase_histories purchase_histories[]
-  created_at         DateTime             @default(now())
-  updated_at         DateTime             @updatedAt
-  orders             orders[]
+  id          String           @id @default(cuid())
+  name        String
+  count       Int              @default(0)
+  price       Int              @default(0)
+  description String?
+  is_on_sale  Boolean          @default(false)
+  images      product_images[]
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+  category    category?        @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  orderItems  order_items[]
 }
 
-// 購入履歴
-model purchase_histories {
-  id          Int      @id @default(autoincrement())
-  total_price Int
-  users       users    @relation(fields: [user_id], references: [id])
-  user_id     Int
-  products    products @relation(fields: [product_id], references: [id])
-  product_id  Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+// カテゴリー
+model category {
+  id       String     @id @default(cuid())
+  name     String
+  products products[]
+}
+
+// 商品画像（複数）
+model product_images {
+  id         String   @id @default(cuid())
+  imageUrl   String
+  product_id String
+  products   products @relation(fields: [product_id], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 // 注文
 model orders {
-  id           Int      @id @default(autoincrement())
-  count        Int      @default(0)
-  products     products @relation(fields: [product_id], references: [id])
-  product_id   Int
-  order_status String
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  id           String        @id @default(cuid())
+  total_price  Int
+  shipping_fee Int
+  tax          Int
+  discount     Int
+  order_status order_status
+  users        users         @relation(fields: [user_id], references: [id])
+  user_id      Int
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  orderItems   order_items[]
+}
+
+// 注文商品
+model order_items {
+  id         String   @id @default(cuid())
+  order_id   String
+  orders     orders   @relation(fields: [order_id], references: [id])
+  product_id String
+  products   products @relation(fields: [product_id], references: [id])
+  quantity   Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum order_status {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELED
 }
