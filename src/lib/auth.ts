@@ -1,4 +1,3 @@
-"use server"
 import { cookies } from "next/headers"
 import jwt from 'jsonwebtoken'
 
@@ -10,8 +9,9 @@ interface UserInfo {
     admin: boolean;
 }
 
-export async function signaturesAction() {
+export async function getCurrentUser() {
 
+    // ユーザ情報取得(cookieからjwt認証)
     const cookie = await cookies();
     const token = cookie.get("auth_token")?.value;
     try {

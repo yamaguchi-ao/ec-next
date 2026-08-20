@@ -1,17 +1,15 @@
-import { signaturesAction } from "@/app/features/auth/actions/signatures-action";
 import Header from "@/components/layout/header";
+import DashBoardForm from "../features/dashboard/components/dashboard-form";
+import { getCurrentUser } from "@/lib/auth";
 
 export default async function DashBoardPage() {
-    const user = await signaturesAction();
+    const user = await getCurrentUser();
 
     return (
         <>
             <title>ダッシュボード</title>
             <Header username={user?.username!} admin={user?.admin!} />
-            <div>
-                <h1>ダッシュボード</h1>
-                <p>ようこそ！</p>
-            </div>
+            <DashBoardForm />
         </>
     )
 }

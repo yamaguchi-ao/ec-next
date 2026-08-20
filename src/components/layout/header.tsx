@@ -3,13 +3,15 @@
 import { logoutAction } from "@/app/features/auth/actions/logout-action";
 import { Button } from "../ui/button";
 import { UserType } from "@/types/types";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { toast } from "../ui/toast";
-import { CircleUser, LogOut, MapPin, Search } from "lucide-react";
+import { CircleUser, LogOut, MapPin, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import logo from "@/public/ecsite-title.png";
 
 export default function Header({ username, admin }: UserType) {
+
+    const router = useRouter();
 
     async function handleLogout() {
         const result = await logoutAction();
@@ -30,31 +32,28 @@ export default function Header({ username, admin }: UserType) {
     return (
         <header>
             <div className="flex justify-between items-center h-16 bg-olive-700/60 w-full px-4">
-                <Image src={logo} alt="Logo" className="h-15 w-auto invert" />
-                {admin ? null :
-                    (<>
-                        <div className="flex flex-col text-white items-start text-base">
-                            <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                <p>お届け先</p>
+                <div className="flex justify-center items-center gap-7">
+                    <Image src={logo} alt="Logo" className="h-15 w-auto invert" loading="eager" />
+                    {admin ? null :
+                        (<>
+                            <div className="flex flex-col text-white items-start text-base">
+                                <div className="flex items-center gap-1">
+                                    <MapPin className="h-4 w-4" />
+                                    <p>お届け先</p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <p>〒001-0000</p>{/* ここはのちに取得した値を入れる*/}
+                                    <p>東京都千代田区</p>{/* ここはのちに取得した値を入れる*/}
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <p>〒001-0000</p>{/* ここはのちに取得した値を入れる*/}
-                                <p>東京都千代田区</p>{/* ここはのちに取得した値を入れる*/}
-                            </div>
-                        </div>
-                        <div className="flex justify-center items-center">
-                            <input className="bg-white text-black border border-gray-300 rounded-l-md py-2 px-4 w-125" placeholder="検索..." />
-                            <Button className="h-11 px-4" variant="search" onClick={() => { }}>
-                                <Search className="size-7" />
-                            </Button>
-                        </div>
-                    </>)}
+                        </>)}
+                </div>
                 <div className="flex items-center gap-3">
                     <div className="text-white">
                         <p className="text-[12px]">こんにちは</p>
                         <p className="text-[18px]">{username}さん</p>
                     </div>
+                    <ShoppingCart className="invert size-8 hover:cursor-pointer" />
                     <CircleUser className="invert size-8" />
                     <Button onClick={handleLogout}>
                         ログアウト

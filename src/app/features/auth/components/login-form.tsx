@@ -1,19 +1,33 @@
 "use client"
 
 import Link from "next/link"
-import { redirect, usePathname } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import Image from "next/image"
+import { redirect, usePathname, useRouter } from "next/navigation";
+import { useActionState, useRef } from "react";
 import { formState, loginAction } from "../actions/login-action";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { LogIn } from "lucide-react";
+import logo from "@/public/ecsite-title.png";
+
 
 export default function LoginForm() {
 
     const pathname = usePathname();
     const adminFlg = pathname.includes("/admin");
+
+    const clickCount = useRef(0);
+    const router = useRouter();
+    const handleClick = () => {
+        clickCount.current++;
+
+        if (clickCount.current >= 5) {
+            clickCount.current = 0;
+            router.push("/login/admin");
+        }
+    };
 
     const [state, login, isPending] = useActionState(
         async (prevState: any, formData: FormData) => {
@@ -25,12 +39,12 @@ export default function LoginForm() {
                     type: result?.success ? "success" : "error",
                     description: result?.message,
                 });
-                
+
                 if (result?.success) {
                     if (adminFlg) {
                         redirect("/dashboard");
                     } else {
-                        redirect("/products");
+                        redirect("/products/list");
                     }
                 }
             }
@@ -50,7 +64,8 @@ export default function LoginForm() {
         <div className="flex w-full h-screen">
             <div className="flex flex-1 bg-muted"></div>
             <div className="flex flex-col justify-center items-center">
-                <h1 className="font-extrabold text-4xl mr-3">{adminFlg ? "管理者" : ""}ログイン</h1>
+                <Image src={logo} alt="Logo" className="h-15 w-auto" loading="eager" onClick={handleClick} />
+                <h1 className="mt-7 font-extrabold text-4xl mr-3">{adminFlg ? "管理者" : ""}ログイン</h1>
                 <div className="mx-14 mb-14 w-85">
                     <form className="flex flex-col justify-center items-center h-full" action={login} id="login">
                         <FieldGroup className="mt-15">
@@ -72,7 +87,7 @@ export default function LoginForm() {
                         <Button className="h-10 px-4 mt-15" type="submit" disabled={isPending} form="login">
                             {isPending ? "ログイン中..." : "ログイン"}
                             {isPending && (<Spinner />)}
-                            {!isPending && (<LogIn className="h-4 w-4" />)}
+                            {!isPending && <LogIn className="h-4 w-4" />}
                         </Button>
                     </form>
                 </div>
