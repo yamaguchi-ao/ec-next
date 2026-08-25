@@ -123,9 +123,9 @@ export default function ProductListForm({ category }: { category: category[] }) 
                             <Separator orientation="horizontal" className="my-2 bg-gray-200" />
                             <ScrollArea className="h-full">
                                 {categories.map((category, index) => (
-                                    <div className={`flex items-center w-full px-5 py-2 gap-2 ${selectedCategory === category.name ? "bg-muted" : ""}`} key={index} >
+                                    <div className={`flex items-center w-full px-5 py-2 gap-2 hover:cursor-pointer ${selectedCategory === category.name ? "bg-muted" : ""}`} key={index} onClick={() => handleSelectCategory(category.name)}>
                                         {selectedCategory === category.name ? <ChevronRight className="size-4" /> : null}
-                                        <p className="hover:cursor-pointer" onClick={() => handleSelectCategory(category.name)}>{category.name}</p>
+                                        <p >{category.name}</p>
                                     </div>
                                 ))}
                             </ScrollArea>
@@ -159,7 +159,6 @@ export default function ProductListForm({ category }: { category: category[] }) 
                                                                 <form action={addCartAction}>
                                                                     <Input type="hidden" name="productId" value={item.id} />
                                                                     <Input type="hidden" name="quantity" value="1" />
-                                                                    <Input type="hidden" name="isIncrement" value="true" />
                                                                     <Button type="submit" className="w-full" onClick={(event) => event.stopPropagation()}>カートに入れる</Button>
                                                                 </form>
                                                             </CardContent>

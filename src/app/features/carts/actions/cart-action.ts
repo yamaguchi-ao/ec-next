@@ -12,8 +12,7 @@ export async function getCart() {
     }
 
     try {
-
-        const items = await prisma.cart.findUnique({
+        const cart = await prisma.cart.findUnique({
             where: { user_id: user.id },
             select: {
                 items: {
@@ -24,6 +23,7 @@ export async function getCart() {
                             select: {
                                 name: true,
                                 price: true,
+                                is_on_sale: true
                             }
                         }
                     }
@@ -31,7 +31,7 @@ export async function getCart() {
             }
         });
 
-        return { success: true, data: items }
+        return { success: true, data: cart }
     } catch (e) {
         console.log("エラー", e);
         return { success: false, message: "カートの取得に失敗しました。" }
@@ -48,11 +48,10 @@ export async function cartUpsert(_prevState: any, formData: FormData) {
 
     const items = {
         productId: formData.get("productId") as string,
-        quantity: Number(formData.get("quantity")),
-        isIncrement: formData.get("isIncrement") === "true"
+        quantity: Number(formData.get("quantity")) || 1,
     }
 
-    const increment = items.isIncrement ? 1 : items.quantity;
+    console.log("数量：", items.quantity);
 
     try {
         await prisma.$transaction(async (tx) => {
@@ -61,6 +60,36 @@ export async function cartUpsert(_prevState: any, formData: FormData) {
                 create: { user_id: user.id },
                 update: {}
             });
+
+            const product = await tx.products.findUnique({
+                where: { id: items.productId },
+                select: {
+                    count: true,
+                    is_on_sale: true
+                }
+            });
+
+            if (!product) {
+                throw Error("商品が見つかりませんでした。");
+            }
+
+            if (!product.is_on_sale) {
+                throw Error("販売停止中です。");
+            }
+
+            const existingItem = await tx.cart_items.findUnique({
+                where: {
+                    cart_id_product_id: {
+                        cart_id: cart.id,
+                        product_id: items.productId
+                    }
+                }
+            });
+
+            const nextQuantity = (existingItem?.quantity ?? 0) + items.quantity;
+            if (product.count < nextQuantity) {
+                throw Error(`在庫が不足しています。\n残り${product.count}個です。`);
+            }
 
             await tx.cart_items.upsert({
                 where: {
@@ -72,33 +101,61 @@ export async function cartUpsert(_prevState: any, formData: FormData) {
                 create: {
                     cart_id: cart.id,
                     product_id: items.productId,
-                    quantity: increment
+                    quantity: nextQuantity
                 },
                 update: {
                     quantity: {
-                        increment: increment
+                        increment: items.quantity
                     }
                 }
             });
         });
         return { success: true, message: "商品をカートに入れました。" }
     } catch (e) {
-        console.log("エラー", e);
-        return { success: false, message: "カートの登録に失敗しました。" }
+        if (e instanceof Error) {
+            console.log("エラー：", e.message);
+            return { success: false, message: e.message ? e.message : "カートの登録に失敗しました。" }
+        }
     }
 }
 
+// 削除処理
 export async function deleteCartItem(cartItemid: string) {
     const user = await getCurrentUser();
 
     if (!user) {
-        return { success: true, message: "認証されていません。" }
+        return { success: false, message: "認証されていません。" }
     }
 
     try {
-        await prisma.cart_items.delete({
-            where: { id: cartItemid }
-        })
+        await prisma.$transaction(async (tx) => {
+            const cart = await tx.cart.findUnique({
+                where: { user_id: user.id },
+                select: {
+                    id: true
+                }
+            });
+
+            if (!cart) {
+                return { success: false, message: "カートが見つかりません。" };
+            }
+
+            const cartItem = await tx.cart_items.findFirst({
+                where: { id: cartItemid, cart_id: cart.id }
+            })
+
+            if (!cartItem) {
+                return { success: false, message: "対象の商品がカート内に存在しません。" }
+            }
+
+            await tx.cart_items.delete({
+                where: {
+                    id: cartItemid,
+                    cart_id: cart.id
+                }
+            })
+        });
+
         return { success: true, message: "カートから商品を削除しました。" }
     } catch (e) {
         console.log("エラー", e);

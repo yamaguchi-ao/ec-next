@@ -16,15 +16,15 @@ type CartFormProps = {
             price: number;
         };
         quantity: number;
-    }[] | null;
+    }[];
 };
 
 
 export default function CartForm({ items }: CartFormProps) {
     const router = useRouter();
 
-    const subtotal = items?.reduce((sum, item) => sum + item.products.price * item.quantity, 0)!;
-    const shippingFee = items?.length! > 0 ? 300 : 0;
+    const subtotal = items.reduce((sum, item) => sum + item.products.price * item.quantity, 0);
+    const shippingFee = items.length > 0 ? 300 : 0;
     const total = subtotal + shippingFee;
 
     const handleDelete = async (cartItemId: string) => {
@@ -32,9 +32,15 @@ export default function CartForm({ items }: CartFormProps) {
         if (result) {
             toast.add({
                 type: result.success ? "success" : "error",
-                description: result.message
+                description: (
+                    <span className="whitespace-pre-line">
+                        {result.message.replace(/\\n/g, "\n")}
+                    </span>
+                )
             });
-            router.refresh();
+            if (result.success) {
+                router.refresh();
+            }
         }
     }
 
@@ -51,14 +57,14 @@ export default function CartForm({ items }: CartFormProps) {
                 </CardHeader>
                 <div className="flex">
                     <CardContent className="w-full">
-                        {items?.length === 0 ? (
+                        {items.length === 0 ? (
                             <div className="rounded-xl p-8 text-center text-slate-500">
                                 カートは空です。
                             </div>
                         ) : (
                             <ScrollArea>
                                 <div className="space-y-4 max-h-60">
-                                    {items?.map((item, index) => (
+                                    {items.map((item, index) => (
                                         <div
                                             key={index}
                                             className="flex items-center gap-4 rounded-xl border border-slate-200 p-4"
@@ -99,7 +105,7 @@ export default function CartForm({ items }: CartFormProps) {
                                                     / 個
                                                 </p>
                                             </div>
-                                            <Button type="submit" variant="destructive" onClick={() => handleDelete(item.id)} >
+                                            <Button type="button" variant="destructive" onClick={() => handleDelete(item.id)} >
                                                 <Trash2 className="size-6" />
                                             </Button>
 
@@ -141,7 +147,7 @@ export default function CartForm({ items }: CartFormProps) {
                                 </span>
                             </div>
 
-                            <Button className="mt-6 w-full" size="lg" disabled={items?.length === 0 ? true : false}>
+                            <Button className="mt-6 w-full" size="lg" disabled={items.length === 0 ? true : false}>
                                 購入する
                             </Button>
                         </div>

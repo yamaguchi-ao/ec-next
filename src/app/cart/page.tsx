@@ -14,12 +14,13 @@ export default async function ProductsListPage() {
     }
 
     const cart = await getCart();
+    const items = cart.success ? cart.data?.items ?? [] : [];
 
     return (
         <>
             <title>カート詳細</title>
             <Header username={user?.username!} admin={user?.admin!} />
-            <CartForm items={cart.data!.items} />
+            <CartForm items={items} />
         </>
     );
 }

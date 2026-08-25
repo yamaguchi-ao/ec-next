@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { category, products } from "@prisma/client";
 import { ChevronLeft, Minus, Plus } from "lucide-react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
-import { productUpdate } from "../../actions/product-action";
 import { toast } from "@/components/ui/toast";
 import { cartUpsert } from "@/app/features/carts/actions/cart-action";
 
@@ -41,14 +40,20 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
         if (!state) {
             return;
         }
+
         toast.add({
             type: state.success ? "success" : "error",
-            description: state.message
-        })
+            description: (
+                <span className="whitespace-pre-line">
+                    {state.message.replace(/\\n/g, "\n")}
+                </span>
+            )
+        });
+
         if (state.success) {
-            redirect("/products/list");
+            router.push("/products/list");
         }
-    }, [state])
+    }, [state, router])
 
     return (
         <>
@@ -124,7 +129,6 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
                                                             className="h-10 w-16 border-0 bg-transparent text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                             aria-label="数量"
                                                         />
-                                                        <Input type="hidden" value="false" name="isIncrement" />
                                                         <Button
                                                             type="button"
                                                             variant="outline"
