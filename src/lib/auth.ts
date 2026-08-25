@@ -1,5 +1,5 @@
 import { cookies } from "next/headers"
-import jwt from 'jsonwebtoken'
+import { jwtVerify } from 'jose'
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -17,9 +17,9 @@ export async function getCurrentUser() {
     try {
         if (token) {
             // JWTトークンの検証
-            const decoded = jwt.verify(token!, JWT_SECRET!) as UserInfo;
-            const { id, username, admin } = decoded;
-            return { id, username, admin };
+            const secret = new TextEncoder().encode(JWT_SECRET);
+            const { payload } = await jwtVerify(token!, secret);
+            return { id: payload.id, username: payload.username, admin: payload.admin } as UserInfo;
         } else {
             return null;
         }

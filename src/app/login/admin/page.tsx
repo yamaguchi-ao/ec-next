@@ -5,7 +5,7 @@ export default function AdminLoginPage() {
         <>
         <title>管理者ログイン</title>
             <div className="flex w-full h-screen">
-                <LoginForm />
+                <LoginForm adminFlg={true}/>
             </div>
         </>
     )

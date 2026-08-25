@@ -4,29 +4,40 @@ import { jwtVerify } from 'jose';
 const JWT_SECRET = process.env.JWT_SECRET;
 
 export default async function proxy(req: NextRequest) {
+    const { pathname } = req.nextUrl;
+
+    const publicPaths = ["/login", "/signup"];
+    const protectedPath = ["/products", "/dashboard", "/users", "/cart"];
+
+    const isPublicPath = publicPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+    const isProtectedPath = protectedPath.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
     const authToken = req.cookies.get("auth_token")?.value;
-    const loginUrl = new URL('/login', req.url);
-    const currentUrl = new URL('/products/list', req.url);
+    const currentUrl = new URL("/login", req.url);
 
-    if (!authToken) {
-        if (!req.nextUrl.pathname.includes("/login")) {
-            return NextResponse.redirect(loginUrl);
-        }
-    } else {
+    if (!authToken && isProtectedPath) {
+        currentUrl.searchParams.set("reason", "session_expired");
+        return NextResponse.redirect(currentUrl);
+    }
+
+    if (authToken) {
         try {
-            // jwtの署名の検証
-            const encode = new TextEncoder().encode(JWT_SECRET);
-            const result = await jwtVerify(authToken, encode);
+            const secret = new TextEncoder().encode(JWT_SECRET);
+            const { payload } = await jwtVerify(authToken, secret);
 
-            // ログインしているのにログイン画面に遷移している場合
-            if (req.nextUrl.pathname.includes("/login") || req.nextUrl.pathname.includes("/signup")) {
-                // 商品画面に自動的に遷移させる
+            if (isPublicPath) {
+                return NextResponse.redirect(new URL("/products/list", req.url));
+            }
+
+            // 管理者チェック
+            if (pathname.startsWith("/dashboard") && payload.admin !== true) {
+                return NextResponse.redirect(new URL("/products/list", req.url));
+            }
+        } catch {
+            if (isProtectedPath) {
+                currentUrl.searchParams.set("reason", "session_expired");
                 return NextResponse.redirect(currentUrl);
             }
-        } catch (error) {
-            console.log("エラー内容：", error);
-            return NextResponse.redirect(loginUrl);
         }
     }
     return NextResponse.next();
@@ -37,6 +48,7 @@ export const config = {
         '/products/:path*',
         '/users/:path*',
         '/dashboard/:path*',
-        '/((?!api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/cart/:path*',
+        '/((?!signup|api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ]
 }

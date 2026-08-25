@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { redirect, usePathname, useRouter } from "next/navigation";
-import { useActionState, useRef } from "react";
+import { redirect, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useActionState, useEffect, useRef } from "react";
 import { formState, loginAction } from "../actions/login-action";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -12,14 +12,26 @@ import { Spinner } from "@/components/ui/spinner";
 import { LogIn } from "lucide-react";
 import logo from "@/public/ecsite-title.png";
 
+export default function LoginForm({ adminFlg = false }: { adminFlg?: boolean }) {
 
-export default function LoginForm() {
-
-    const pathname = usePathname();
-    const adminFlg = pathname.includes("/admin");
+    const searchParams = useSearchParams();
 
     const clickCount = useRef(0);
     const router = useRouter();
+
+    useEffect(() => {
+        const reason = searchParams.get("reason");
+        if (reason === "session_expired") {
+            toast.add({
+                type: "error",
+                description:
+                    <span className="whitespace-pre-line">
+                        {"セッションが切れました。\n再度ログインを行ってください。"}
+                    </span>
+            })
+        }
+    }, [searchParams]);
+
     const handleClick = () => {
         clickCount.current++;
 
@@ -42,9 +54,9 @@ export default function LoginForm() {
 
                 if (result?.success) {
                     if (adminFlg) {
-                        redirect("/dashboard");
+                        router.push("/dashboard");
                     } else {
-                        redirect("/products/list");
+                        router.push("/products/list");
                     }
                 }
             }

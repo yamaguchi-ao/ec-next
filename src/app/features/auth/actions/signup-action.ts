@@ -10,6 +10,7 @@ import { cookies } from "next/headers"
 const MIN_DIGIT = 8;
 // jwtトークン
 const JWT_SECRET = process.env.JWT_SECRET;
+const production = process.env.NODE_ENV === "production";
 
 const schema = z.object({
     username: z.string().min(1, { message: "ユーザーネームを入力してください" }),
@@ -75,7 +76,7 @@ export async function SignupAction(_prevState: formState, formData: FormData) {
                     // cookieにJWTを登録しておく
                     cookie.set("auth_token", token, {
                         httpOnly: true,
-                        secure: true,
+                        secure: production ? true : false,
                         sameSite: "strict",
                         maxAge: 3600
                     });

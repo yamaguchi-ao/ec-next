@@ -2,7 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.NEXT_PUBLIC_SUPABASE_SECRET_KEY!;
+const supabaseSecretKey = process.env.NEXT_SECRET_SUPABASE_KEY!;
 
 type SupabaseClientSingleton = ReturnType<typeof supabaseClientSingleton>;
 
