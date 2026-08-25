@@ -58,12 +58,12 @@ export default function CartForm({ items }: CartFormProps) {
                 <div className="flex">
                     <CardContent className="w-full">
                         {items.length === 0 ? (
-                            <div className="rounded-xl p-8 text-center text-slate-500">
-                                カートは空です。
+                            <div className="flex justify-center rounded-xl p-8 items-center text-slate-500 h-[calc(100vh-27rem)] text-[28px]">
+                                <p>カートは空です</p>
                             </div>
                         ) : (
                             <ScrollArea>
-                                <div className="space-y-4 max-h-60">
+                                <div className="space-y-4 max-h-[calc(100vh-27rem)]">
                                     {items.map((item, index) => (
                                         <div
                                             key={index}

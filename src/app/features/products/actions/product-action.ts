@@ -58,7 +58,7 @@ export async function getProducts(search: string, page?: number) {
         const totalData = await prisma.products.count({ where: whereConditions });
         const totalPage = Math.ceil(totalData / limit);
 
-        return { success: true, data: products, totalPage: totalPage, currentPage: page };
+        return { success: true, data: products, totalPage: totalPage, currentPage: Math.max(Number(page) || 1, 1) };
 
     } catch (e) {
         console.log("エラー内容：", e);
