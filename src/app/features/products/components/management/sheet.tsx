@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dispatch, useActionState, useState } from "react";
+import { useActionState, useState } from "react";
 import { productRegister } from "../../actions/product-action";
 import { toast } from "@/components/ui/toast";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
@@ -30,7 +30,7 @@ export default function RegisterSheet() {
     const [select, setSelect] = useState("select");
 
     const [state, register, pending] = useActionState(
-        async (prevState: any, formData: FormData) => {
+        async (prevState: unknown, formData: FormData) => {
             const result = await productRegister(prevState, formData);
             if (result?.fieldErrors) {
                 setOpen(false);

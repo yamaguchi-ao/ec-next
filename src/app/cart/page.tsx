@@ -4,10 +4,13 @@ import { redirect } from "next/navigation";
 import CartForm from "../features/carts/components/cart-form";
 import { getCart } from "../features/carts/actions/cart-action";
 
-
 export default async function ProductsListPage() {
     const user = await getCurrentUser();
     const adminFlg = user?.admin;
+
+    if (!user) {
+        redirect("/login")
+    }
 
     if (adminFlg) {
         redirect("/dashboard")
@@ -19,7 +22,7 @@ export default async function ProductsListPage() {
     return (
         <>
             <title>カート詳細</title>
-            <Header username={user?.username!} admin={user?.admin!} />
+            <Header username={user.username} admin={user.admin} />
             <CartForm items={items} />
         </>
     );

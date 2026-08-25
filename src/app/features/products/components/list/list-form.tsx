@@ -5,7 +5,7 @@ import { ProductType } from "@/types/types";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState, } from "react";
 import { toast } from "@/components/ui/toast";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export default function ProductListForm({ category }: { category: category[] }) 
     const [selectedCategory, setSelectedCategory] = useState("");
 
     // カート追加
-    const [state, addCartAction, pending] = useActionState(cartUpsert, null);
+    const [state, addCartAction] = useActionState(cartUpsert, null);
 
     useEffect(() => {
         setCategories(category);

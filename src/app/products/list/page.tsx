@@ -12,6 +12,10 @@ export default async function ProductsListPage() {
     const categoryResult = await getCategories();
     const categories = categoryResult?.data ? categoryResult.data : [];
 
+    if (!user) {
+        redirect("/login");
+    }
+
     if (adminFlg) {
         redirect("/dashboard")
     }
@@ -19,7 +23,7 @@ export default async function ProductsListPage() {
     return (
         <>
             <title>商品一覧</title>
-            <Header username={user?.username!} admin={user?.admin!} />
+            <Header username={user.username!} admin={adminFlg} />
             <ProductListForm category={categories} />
         </>
     );

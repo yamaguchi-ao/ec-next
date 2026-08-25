@@ -71,11 +71,12 @@ export default function CartForm({ items }: CartFormProps) {
                                         >
                                             <div className="h-20 w-20 overflow-hidden rounded-lg bg-slate-100">
                                                 {item ? (
-                                                    <img
-                                                        src={"test"}
-                                                        alt={"test"}
-                                                        className="h-full w-full object-cover"
-                                                    />
+                                                    // <img
+                                                    //     src={"test"}
+                                                    //     alt={"test"}
+                                                    //     className="h-full w-full object-cover"
+                                                    // />
+                                                    <></>
                                                 ) : (
                                                     <div className="flex h-full items-center justify-center text-xs text-slate-400">
                                                         No Image

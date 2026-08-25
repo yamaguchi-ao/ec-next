@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const name = searchParams.get("name");
     const category = searchParams.get("category");
-    const page = Number(searchParams.get("page"));
+    const page = Number(searchParams.get("page")) || 1;
 
     const limit = 10;
     const offset = (page - 1) * limit;

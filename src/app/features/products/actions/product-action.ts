@@ -86,7 +86,7 @@ export async function getProduct(id: string) {
 }
 
 // 商品の登録
-export async function productRegister(_prevState: any, formdata: FormData) {
+export async function productRegister(_prevState: unknown, formdata: FormData) {
 
     const registData = {
         name: formdata?.get("name") as string,
@@ -156,7 +156,7 @@ export async function productRegister(_prevState: any, formdata: FormData) {
 }
 
 // 商品の更新
-export async function productUpdate(_prevState: any, formdata: FormData, id: string) {
+export async function productUpdate(_prevState: unknown, formdata: FormData, id: string) {
     const updateData = {
         name: formdata.get("name") as string,
         category: formdata.get("category") as string,

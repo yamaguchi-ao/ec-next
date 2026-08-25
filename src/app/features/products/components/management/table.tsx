@@ -10,7 +10,7 @@ import { toast } from "@/components/ui/toast";
 import { productDelete } from "../../actions/product-action";
 import { productsData } from "./management-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 
 export default function ListTable() {

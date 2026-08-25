@@ -39,7 +39,7 @@ export async function getCart() {
 }
 
 // カート登録
-export async function cartUpsert(_prevState: any, formData: FormData) {
+export async function cartUpsert(_prevState: unknown, formData: FormData) {
     const user = await getCurrentUser();
 
     if (!user) {

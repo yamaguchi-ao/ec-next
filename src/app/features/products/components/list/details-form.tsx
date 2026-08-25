@@ -34,7 +34,7 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
         setQuantity((prev) => Math.min(maxQuantity, Math.max(1, prev + change)));
     };
 
-    const [state, addCartAction, pending] = useActionState(cartUpsert, null);
+    const [state, addCartAction] = useActionState(cartUpsert, null);
 
     useEffect(() => {
         if (!state) {

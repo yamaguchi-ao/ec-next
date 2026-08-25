@@ -1,8 +1,6 @@
-import { users, products } from "@prisma/client";
-
 export type UserType = {
     id?: number,
-    username?: string,
+    username: string,
     admin?: boolean
 }
 

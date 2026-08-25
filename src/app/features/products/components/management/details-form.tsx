@@ -37,8 +37,8 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
         setSelectCategory(data.categoryId ?? "");
     }, []);
 
-    const [state, updateAction, pending] = useActionState(
-        async (prevState: any, formData: FormData) => {
+    const [state, updateAction] = useActionState(
+        async (prevState: unknown, formData: FormData) => {
             const result = await productUpdate(prevState, formData, productId);
             if (result?.fieldErrors) {
                 return result?.fieldErrors
