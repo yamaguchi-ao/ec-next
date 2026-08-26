@@ -134,7 +134,7 @@ Prisma の `prisma/schema.prisma` には、以下の主要モデルがありま�
 - React 19
 - TypeScript
 - Tailwind CSS
-- shadcn/ui 風の UI コンポーネント群
+- shadcn/ui
 
 ### バックエンド/データ層
 

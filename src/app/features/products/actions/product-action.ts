@@ -1,5 +1,6 @@
 "use server"
 
+import { requireAdmin } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { findProduct } from "@/lib/prisma/query";
 import { Prisma } from "@prisma/client";
@@ -25,6 +26,9 @@ export async function getProducts(search: string, page?: number) {
     const offset = (page! - 1) * limit;
 
     try {
+        // 認証
+        await requireAdmin();
+
         const whereConditions: Prisma.productsWhereInput = {}
 
         if (search) {
@@ -44,7 +48,6 @@ export async function getProducts(search: string, page?: number) {
                             }
                         },
                     ],
-
                 }
             ]
         }
@@ -61,14 +64,18 @@ export async function getProducts(search: string, page?: number) {
         return { success: true, data: products, totalPage: totalPage, currentPage: Math.max(Number(page) || 1, 1) };
 
     } catch (e) {
-        console.log("エラー内容：", e);
-        return { success: false, message: "商品の取得に失敗しました。" }
+        if (e instanceof Error) {
+            console.log("エラー内容：", e.message);
+            return { success: false, message: e.message ? e.message : "商品の取得に失敗しました。" }
+        }
     }
 }
 
 // 商品詳細取得
 export async function getProduct(id: string) {
     try {
+        // 認証
+        await requireAdmin();
         const product = await prisma.products.findUnique({
             where: { id: id },
         });
@@ -80,8 +87,10 @@ export async function getProduct(id: string) {
         return { success: true, data: product };
 
     } catch (e) {
-        console.log("エラー内容：", e);
-        return { success: false, message: "商品の取得に失敗しました。" }
+        if (e instanceof Error) {
+            console.log("エラー内容：", e);
+            return { success: false, message: e.message ? e.message : "商品の取得に失敗しました。" }
+        }
     }
 }
 
@@ -104,6 +113,9 @@ export async function productRegister(_prevState: unknown, formdata: FormData) {
         return { success: false, message: "バリデーションエラー", fieldErrors: validation.fieldErrors }
     } else {
         try {
+            // 認証
+            await requireAdmin();
+
             // 既存商品の確認
             const product = await prisma.products.findFirst({
                 where: { name: registData.name }
@@ -117,6 +129,7 @@ export async function productRegister(_prevState: unknown, formdata: FormData) {
                     const category = await prisma.category.findFirst({
                         where: { name: registData.inputCategory }
                     });
+
                     if (category) {
                         return { success: false, message: "同一カテゴリーが存在します。" }
                     }
@@ -149,8 +162,10 @@ export async function productRegister(_prevState: unknown, formdata: FormData) {
             }
             return { success: true, message: "商品を登録しました。" }
         } catch (e) {
-            console.log("エラー内容：", e);
-            return { success: false, message: "商品登録に失敗しました。" }
+            if (e instanceof Error) {
+                console.log("エラー内容：", e.message);
+                return { success: false, message: e.message ? e.message : "商品登録に失敗しました。" }
+            }
         }
     }
 }
@@ -173,6 +188,8 @@ export async function productUpdate(_prevState: unknown, formdata: FormData, id:
         return { success: false, message: "商品の更新に失敗しました。", fieldErrors: validation.fieldErrors };
     } else {
         try {
+            // 認証
+            await requireAdmin();
             await prisma.products.update({
                 where: { id: id },
                 data: {
@@ -187,8 +204,10 @@ export async function productUpdate(_prevState: unknown, formdata: FormData, id:
 
             return { success: true, message: "商品の更新をしました。" };
         } catch (e) {
-            console.log("エラー：", e);
-            return { success: false, message: "商品の更新に失敗しました。" };
+            if (e instanceof Error) {
+                console.log("エラー：", e.message);
+                return { success: false, message: e.message ? e.message : "商品の更新に失敗しました。" };
+            }
         }
     }
 }
@@ -196,12 +215,15 @@ export async function productUpdate(_prevState: unknown, formdata: FormData, id:
 // 商品の削除
 export async function productDelete(productId: string) {
     try {
+        await requireAdmin();
         await prisma.products.delete({
             where: { id: productId }
         });
         return { success: true, message: "商品を削除しました。" };
     } catch (e) {
-        console.log("エラー：", e);
-        return { success: false, message: "商品の削除に失敗しました。" };
+        if (e instanceof Error) {
+            console.log("エラー：", e.message);
+            return { success: false, message: e.message ? e.message : "商品の削除に失敗しました。" };
+        }
     }
 }

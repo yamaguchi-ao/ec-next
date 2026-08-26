@@ -10,14 +10,6 @@ export default async function listDetailsPage({ params }: { params: Promise<{ id
     const adminFlg = user?.admin;
     const id = (await params).id;
 
-    // 商品詳細用取得
-    const productResult = await getProduct(id);
-    const product = productResult.data!;
-
-    // カテゴリーの取得
-    const categoryResult = await getCategories();
-    const categories = categoryResult?.data ? categoryResult.data : [];
-
     if (!user) {
         redirect("/login");
     }
@@ -25,6 +17,14 @@ export default async function listDetailsPage({ params }: { params: Promise<{ id
     if (adminFlg) {
         redirect("/dashboard")
     }
+
+    // 商品詳細用取得
+    const productResult = await getProduct(id);
+    const product = productResult.data!;
+
+    // カテゴリーの取得
+    const categoryResult = await getCategories();
+    const categories = categoryResult?.data ? categoryResult.data : [];
 
     return (
         <>

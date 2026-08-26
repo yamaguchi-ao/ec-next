@@ -1,17 +1,14 @@
 "use server"
 
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 // カート取得
 export async function getCart() {
-    const user = await getCurrentUser();
-
-    if (!user) {
-        return { success: false, message: "認証されていません。" }
-    }
-
     try {
+        // 認証
+        const user = await requireUser();
+
         const cart = await prisma.cart.findUnique({
             where: { user_id: user.id },
             select: {
@@ -40,20 +37,14 @@ export async function getCart() {
 
 // カート登録
 export async function cartUpsert(_prevState: unknown, formData: FormData) {
-    const user = await getCurrentUser();
-
-    if (!user) {
-        return { success: false, message: "認証されていません。" };
-    }
-
     const items = {
         productId: formData.get("productId") as string,
         quantity: Number(formData.get("quantity")) || 1,
     }
 
-    console.log("数量：", items.quantity);
-
     try {
+        // 認証
+        const user = await requireUser();
         await prisma.$transaction(async (tx) => {
             const cart = await tx.cart.upsert({
                 where: { user_id: user.id },
@@ -121,13 +112,9 @@ export async function cartUpsert(_prevState: unknown, formData: FormData) {
 
 // 削除処理
 export async function deleteCartItem(cartItemid: string) {
-    const user = await getCurrentUser();
-
-    if (!user) {
-        return { success: false, message: "認証されていません。" }
-    }
-
     try {
+        // 認証
+        const user = await requireUser();
         await prisma.$transaction(async (tx) => {
             const cart = await tx.cart.findUnique({
                 where: { user_id: user.id },
@@ -137,7 +124,7 @@ export async function deleteCartItem(cartItemid: string) {
             });
 
             if (!cart) {
-                return { success: false, message: "カートが見つかりません。" };
+                throw Error("カートが見つかりませんでした。");
             }
 
             const cartItem = await tx.cart_items.findFirst({
@@ -145,20 +132,19 @@ export async function deleteCartItem(cartItemid: string) {
             })
 
             if (!cartItem) {
-                return { success: false, message: "対象の商品がカート内に存在しません。" }
+                throw Error("商品が存在しません。");
             }
 
             await tx.cart_items.delete({
-                where: {
-                    id: cartItemid,
-                    cart_id: cart.id
-                }
+                where: { id: cartItemid }
             })
         });
 
         return { success: true, message: "カートから商品を削除しました。" }
     } catch (e) {
-        console.log("エラー", e);
-        return { success: false, message: "カートから商品の削除に失敗しました。" }
+        if (e instanceof Error) {
+            console.log("エラー", e.message);
+            return { success: false, message: e.message ? e.message : "カートから商品の削除に失敗しました。" }
+        }
     }
 }

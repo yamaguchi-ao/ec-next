@@ -6,9 +6,11 @@ import { redirect } from "next/navigation";
 export default async function DashBoardPage() {
     const user = await getCurrentUser();
 
-    if (!user) {
-        redirect("/login");
-    }
+    // 認証
+    if (!user) redirect("/login");
+
+    // 一般確認
+    if (!user.admin) redirect("/products/list");
 
     return (
         <>

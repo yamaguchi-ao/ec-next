@@ -8,13 +8,11 @@ export default async function ProductsListPage() {
     const user = await getCurrentUser();
     const adminFlg = user?.admin;
 
-    if (!user) {
-        redirect("/login")
-    }
+    // 認証
+    if (!user) redirect("/login");
 
-    if (adminFlg) {
-        redirect("/dashboard")
-    }
+    // 管理者確認
+    if (adminFlg) redirect("/dashboard");
 
     const cart = await getCart();
     const items = cart.success ? cart.data?.items ?? [] : [];
@@ -22,7 +20,7 @@ export default async function ProductsListPage() {
     return (
         <>
             <title>カート詳細</title>
-            <Header username={user.username} admin={user.admin} />
+            <Header username={user.username} admin={adminFlg} />
             <CartForm items={items} />
         </>
     );

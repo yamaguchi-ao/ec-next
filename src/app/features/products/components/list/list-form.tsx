@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProductType } from "@/types/types";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useActionState, useEffect, useState, } from "react";
 import { toast } from "@/components/ui/toast";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -59,21 +59,25 @@ export default function ProductListForm({ category }: { category: category[] }) 
     // 検索
     async function search({ name = phrase, category = selectedCategory, page = 1 }: searchProp = {}) {
         const url = `/products/list/?name=${name ? name : ""}&category=${category ? category : ""}&page=${page ? page : 1}`;
-        const result = await apiClient.get(url, {
+        await apiClient.get(url, {
             method: "GET",
             withCredentials: true,
-        });
-        if (result.data) {
-            setCurrentPage(result.data.page);
-            setTotalPage(result.data.totalPage);
-            setData(result?.data.data);
-            router.refresh();
-        } else {
+        }).then(response => {
+            if (response.data) {
+                setCurrentPage(response.data.page);
+                setTotalPage(response.data.totalPage);
+                setData(response.data.data);
+                router.refresh();
+            }
+        }).catch(error => {
             toast.add({
                 type: "error",
-                description: result.data.message
+                description: error.response.data.message
             });
-        }
+            if (error.response.status === 500) {
+                redirect("/login");
+            }
+        })
     }
 
     // ページ数

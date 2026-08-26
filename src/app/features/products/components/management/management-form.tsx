@@ -65,7 +65,7 @@ export default function ProductManagementForm({ category }: { category: category
     // 検索
     async function search({ page = 1 }: searchProp = {}) {
         const result = await getProducts(phrase, page);
-        if (result.success) {
+        if (result?.success) {
             setCurrentPage(result.currentPage!);
             setTotalPage(result.totalPage!);
             setData(result.data!);

@@ -8,10 +8,6 @@ export default async function ProductsListPage() {
     const user = await getCurrentUser();
     const adminFlg = user?.admin;
 
-    // カテゴリーの取得
-    const categoryResult = await getCategories();
-    const categories = categoryResult?.data ? categoryResult.data : [];
-
     if (!user) {
         redirect("/login");
     }
@@ -19,6 +15,10 @@ export default async function ProductsListPage() {
     if (adminFlg) {
         redirect("/dashboard")
     }
+
+    // カテゴリーの取得
+    const categoryResult = await getCategories();
+    const categories = categoryResult?.data ? categoryResult.data : [];
 
     return (
         <>
