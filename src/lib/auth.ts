@@ -15,24 +15,28 @@ export async function getCurrentUser(): Promise<UserInfo | null> {
     const cookie = await cookies();
     const token = cookie.get("auth_token")?.value;
 
-    if (!token) return null;
+    if (!token || !JWT_SECRET) return null;
 
     try {
-        if (!JWT_SECRET) {
-            console.log("JWT_SECRETの設定が出来ていません。");
-            return null;
-        }
-        
         const secret = new TextEncoder().encode(JWT_SECRET);
-        const { payload } = await jwtVerify(token!, secret);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+
+        if (
+            typeof payload.id !== "number" ||
+            typeof payload.username !== "string" ||
+            typeof payload.admin !== "boolean"
+        ) {
+            throw new Error("JWT payloadが不正です。");
+        }
 
         return {
-            id: Number(payload.id),
-            username: String(payload.username),
-            admin: Boolean(payload.admin)
+            id: payload.id,
+            username: payload.username,
+            admin: payload.admin
         }
     } catch (error) {
         console.log("エラー内容：", error);
+        cookieStore.delete("auth_token");
         return null;
     }
 }

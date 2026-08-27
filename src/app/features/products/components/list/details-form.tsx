@@ -6,19 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { category, products } from "@prisma/client";
 import { ChevronLeft, Minus, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { cartUpsert } from "@/app/features/carts/actions/cart-action";
+import { useCartCount } from "@/components/providers/cart-count-provider";
 
 interface detailsProp {
-    data?: products 
+    data?: products
     categories: category[]
 }
 
 export default function ProductListDetailsForm({ data, categories }: detailsProp) {
     const router = useRouter();
-    
+    const { refreshCartCount } = useCartCount();
+
+    if (!data) {
+        toast.add({
+            type: "error",
+            description: "商品が見つかりませんでした。"
+        });
+        redirect("/products/list");
+    }
+
     // 商品ID取得
     const productId = data?.id;
 
@@ -43,7 +53,7 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
 
         toast.add({
             type: state.success ? "success" : "error",
-            description: (
+            description: state.fieldErrors ? state.fieldErrors.quantity : (
                 <span className="whitespace-pre-line">
                     {state.message.replace(/\\n/g, "\n")}
                 </span>
@@ -53,7 +63,15 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
         if (state.success) {
             router.push("/products/list");
         }
-    }, [state, router])
+
+        // カートの増減
+        const effect = async () => {
+            if (state.success) {
+                await refreshCartCount();
+            }
+        }
+        void effect();
+    }, [state, router]);
 
     return (
         <>
@@ -64,7 +82,10 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
                             <div className="flex justify-between">
                                 <div className="flex items-center gap-3">
                                     <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => router.back()}></ChevronLeft>
-                                    <CardTitle className="text-3xl">商品詳細</CardTitle>
+                                    <div>
+                                        <CardTitle className="text-2xl">商品詳細</CardTitle>
+                                        <CardDescription className="mt-1">商品の詳細を確認したり、個数選択をしてカートへの追加が行えます。</CardDescription>
+                                    </div>
                                 </div>
                             </div>
                         </CardHeader>

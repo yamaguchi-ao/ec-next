@@ -51,7 +51,7 @@ export default function ListTable() {
 
     return (
         <>
-            <ScrollArea className="h-[calc(100vh-18rem)] rounded-lg border bg-background">
+            <ScrollArea className="h-[calc(100vh-21rem)] rounded-lg border bg-background">
                 <Table>
                     <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
                         <TableRow>

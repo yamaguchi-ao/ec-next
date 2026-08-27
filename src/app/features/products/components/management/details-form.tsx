@@ -23,6 +23,14 @@ interface detailsProp {
 export default function ProductDetailsForm({ data, categories }: detailsProp) {
     const router = useRouter();
 
+    if (!data) {
+        toast.add({
+            type: "error",
+            description: "商品が見つかりませんでした。"
+        });
+        redirect("/products/management");
+    }
+
     // 商品ID取得
     const productId = data?.id;
 
@@ -78,7 +86,10 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                             <div className="flex justify-between">
                                 <div className="flex items-center gap-3">
                                     <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => router.back()}></ChevronLeft>
-                                    <CardTitle className="text-3xl">商品詳細</CardTitle>
+                                    <div>
+                                        <CardTitle className="text-2xl">商品詳細</CardTitle>
+                                        <CardDescription className="mt-1">商品の編集を行い、価格やカテゴリー、在庫数などの商品情報を管理します。</CardDescription>
+                                    </div>
                                 </div>
                             </div>
                         </CardHeader>

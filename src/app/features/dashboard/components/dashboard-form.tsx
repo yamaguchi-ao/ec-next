@@ -27,8 +27,8 @@ export default async function DashBoardForm() {
                         <p className="text-muted-foreground">ショップの状況を確認できます。</p>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" render={<Link href="/products/list" />}>商品ページ <ArrowUpRight /></Button>
-                        <Button render={<Link href="/products/management" />}>商品を管理 <PackageSearch /></Button>
+                        <Button nativeButton={false} variant="outline" render={<Link href="/products/list" />}>商品ページ <ArrowUpRight /></Button>
+                        <Button nativeButton={false} render={<Link href="/products/management" />}>商品を管理 <PackageSearch /></Button>
                     </div>
                 </div>
 

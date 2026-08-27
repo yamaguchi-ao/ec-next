@@ -16,6 +16,7 @@ import { ChevronRight, Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiClient } from "@/lib/axios";
 import { cartUpsert } from "@/app/features/carts/actions/cart-action";
+import { useCartCount } from "@/components/providers/cart-count-provider";
 
 type searchProp = {
     name?: string,
@@ -25,6 +26,7 @@ type searchProp = {
 
 export default function ProductListForm({ category }: { category: category[] }) {
     const router = useRouter();
+    const { refreshCartCount } = useCartCount();
 
     // 商品を取得する
     const [data, setData] = useState<ProductType[]>([]);
@@ -52,8 +54,19 @@ export default function ProductListForm({ category }: { category: category[] }) 
         }
         toast.add({
             type: state.success ? "success" : "error",
-            description: state.message
+            description: state.fieldErrors ? state.fieldErrors.quantity : (
+                <span className="whitespace-pre-line">
+                    {state.message.replace(/\\n/g, "\n")}
+                </span>
+            )
         });
+        // カートの増減
+        const effect = async () => {
+            if (state.success) {
+                await refreshCartCount();
+            }
+        }
+        void effect();
     }, [selectedCategory, state]);
 
     // 検索
@@ -111,7 +124,10 @@ export default function ProductListForm({ category }: { category: category[] }) 
                     <CardHeader>
                         <div className="flex justify-between">
                             <div className="flex items-center gap-3">
-                                <CardTitle className="text-3xl">商品一覧</CardTitle>
+                                <div>
+                                    <CardTitle className="text-2xl">商品一覧</CardTitle>
+                                    <CardDescription className="mt-1">商品の一部を確認したり、検索で特定の商品の閲覧が行えます。</CardDescription>
+                                </div>
                             </div>
                             <ButtonGroup>
                                 <Input className="bg-white text-black border border-gray-300 py-2 px-4 w-100" value={phrase} onChange={(e) => setPhrase(e.target.value)} placeholder="検索..." />

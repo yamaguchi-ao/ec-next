@@ -93,15 +93,13 @@ export default function ProductManagementForm({ category }: { category: category
 
     return (
         <>
-            <div className="min-h-[calc(100vh-4rem)] w-full bg-muted/40 p-5">
-                <div className="mx-auto max-w-7xl">
-                    <Card className="overflow-hidden">
+            <div className="h-[calc(100vh-4rem)] w-full bg-muted/40 p-5">
+                <div className="mx-auto max-w-7xl h-full">
+                    <Card className="h-full">
                         <CardHeader className="border-b bg-card">
                             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="flex items-center gap-3">
-                                    <Button variant="ghost" size="icon-lg" aria-label="ダッシュボードへ戻る" onClick={() => redirect("/dashboard")}>
-                                        <ChevronLeft />
-                                    </Button>
+                                    <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => redirect("/dashboard")}></ChevronLeft>
                                     <div>
                                         <CardTitle className="text-2xl">商品管理</CardTitle>
                                         <CardDescription className="mt-1">商品の登録、在庫、販売状態を管理します。</CardDescription>
@@ -115,7 +113,7 @@ export default function ProductManagementForm({ category }: { category: category
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-5">
+                        <CardContent className="px-5">
                             <ProductContext.Provider value={data}>
                                 <CategoryContext.Provider value={categories}>
                                     <OpenContext.Provider value={open}>
