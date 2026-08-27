@@ -12,7 +12,7 @@ export default async function detailsPage({ params }: { params: Promise<{ id: st
 
     // 商品詳細用取得
     const productResult = await getProduct(id);
-    const product = productResult.data!;
+    const product = productResult?.data;
 
     // カテゴリーの取得
     const categoryResult = await getCategories();

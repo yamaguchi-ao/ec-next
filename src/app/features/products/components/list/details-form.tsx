@@ -12,21 +12,21 @@ import { toast } from "@/components/ui/toast";
 import { cartUpsert } from "@/app/features/carts/actions/cart-action";
 
 interface detailsProp {
-    data: products
+    data?: products 
     categories: category[]
 }
 
 export default function ProductListDetailsForm({ data, categories }: detailsProp) {
     const router = useRouter();
-
+    
     // 商品ID取得
-    const productId = data.id;
+    const productId = data?.id;
 
     // カテゴリー取得
-    const matchedCategory = categories.find((item) => data.categoryId === item.id);
+    const matchedCategory = categories.find((item) => data?.categoryId === item.id);
 
     // 数量指定用
-    const maxQuantity = data.count > 0 ? data.count : 1;
+    const maxQuantity = Math.max(1, data?.count ?? 1);
     const [quantity, setQuantity] = useState(1);
 
     // 数量増減
@@ -77,7 +77,7 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
                                     <div className="flex flex-col w-full">
                                         <form action={addCartAction}>
                                             <Input type="hidden" name="productId" value={productId}></Input>
-                                            <Label className="text-3xl">{data.name}</Label>
+                                            <Label className="text-3xl">{data?.name}</Label>
 
                                             <div className="flex gap-1">
                                                 <Label> カテゴリー：</Label>
@@ -86,19 +86,19 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
 
                                             <div className="flex gap-1">
                                                 <Label> 在庫：</Label>
-                                                <Label className="text-[18px]">{data.count > 0 ? `残り${data.count}点` : "売り切れ中"}</Label>
+                                                <Label className="text-[18px]">{(data?.count ?? 0) > 0 ? `残り${data?.count ?? 0}点` : "売り切れ中"}</Label>
                                             </div>
 
                                             <div className="grid gap-3 py-3">
                                                 <Label className="text-[18px]">商品説明</Label>
-                                                <Label className="">{data.description ? data.description : "特になし"}</Label>
+                                                <Label className="">{data?.description ? data.description : "特になし"}</Label>
                                             </div>
                                             <div className="flex justify-end items-end py-3">
                                                 <Label className="text-[20px]">価格(税込)</Label>
                                                 <p className="text-[22px] pl-2 pr-1">¥</p>
-                                                <Label className="text-4xl">{data.price.toLocaleString()}</Label>
+                                                <Label className="text-4xl">{data?.price.toLocaleString()}</Label>
                                             </div>
-                                            {!data.is_on_sale ? (
+                                            {!data?.is_on_sale ? (
                                                 <div className="h-full rounded-xl p-8 text-center text-slate-500">
                                                     SOLD OUT
                                                 </div>

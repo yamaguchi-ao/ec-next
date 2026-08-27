@@ -36,7 +36,7 @@ export default function ListTable() {
             router.refresh();
         }
         toast.add({
-            type: result.success ? "success" : "error",
+            type: result?.success ? "success" : "error",
             description: result?.message
         });
     }

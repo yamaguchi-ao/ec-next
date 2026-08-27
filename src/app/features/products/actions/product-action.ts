@@ -74,8 +74,6 @@ export async function getProducts(search: string, page?: number) {
 // 商品詳細取得
 export async function getProduct(id: string) {
     try {
-        // 認証
-        await requireAdmin();
         const product = await prisma.products.findUnique({
             where: { id: id },
         });
