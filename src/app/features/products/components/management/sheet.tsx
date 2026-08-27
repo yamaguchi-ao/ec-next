@@ -63,12 +63,15 @@ export default function RegisterSheet() {
                     </Button>
                 } />
             </div>
-            <SheetContent>
+            <SheetContent className="flex w-full flex-col sm:max-w-xl">
                 <SheetHeader>
                     <SheetTitle className="text-2xl">商品登録</SheetTitle>
+                    <p className="text-sm text-muted-foreground">新しい商品情報を入力してください。</p>
                 </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4 overflow-y-scroll">
+                <div className="min-h-0 flex-1 overflow-y-auto px-4">
                     <form id="product-form" action={register}>
+                        <div className="rounded-lg border bg-muted/30 p-4">
+                            <p className="mb-3 text-sm font-semibold">基本情報</p>
                         <FieldGroup>
                             <Field>
                                 <div className="grid gap-3 py-3">
@@ -78,8 +81,11 @@ export default function RegisterSheet() {
                                 </div>
                             </Field>
                         </FieldGroup>
+                        </div>
                         <RadioGroup value={select} onValueChange={setSelect}>
-                            <div className="flex gap-3 py-3">
+                            <div className="mb-2 rounded-lg border bg-muted/30 p-4">
+                            <p className="mb-3 text-sm font-semibold">カテゴリー</p>
+                            <div className="flex flex-col gap-3 sm:flex-row">
                                 <div className="flex justify-center items-center gap-2">
                                     <RadioGroupItem value="select" id="select" />
                                     <Label htmlFor="select">既存カテゴリー選択</Label>
@@ -122,7 +128,9 @@ export default function RegisterSheet() {
                                     </Field>
                                 </FieldGroup>
                             }
+                        </div>
                         </RadioGroup>
+                        <div className="mt-4 grid gap-4 rounded-lg border bg-muted/30 p-4 sm:grid-cols-2">
                         <FieldGroup>
                             <Field>
                                 <div className="grid gap-3 py-3">
@@ -142,7 +150,9 @@ export default function RegisterSheet() {
                                 </div>
                             </Field>
                         </FieldGroup>
+                        </div>
 
+                        <div className="mt-4 rounded-lg border bg-muted/30 p-4">
                         <FieldGroup>
                             <Field>
                                 <div className="grid gap-3 py-3">
@@ -152,10 +162,11 @@ export default function RegisterSheet() {
                                 </div>
                             </Field>
                         </FieldGroup>
+                        </div>
                     </form>
                 </div>
-                <SheetFooter>
-                    <Button type="submit" form="product-form">商品登録</Button>
+                <SheetFooter className="border-t bg-background">
+                    <Button type="submit" form="product-form" disabled={pending}>商品登録</Button>
                     <SheetClose render={<Button variant="outline">閉じる</Button>} />
                 </SheetFooter>
             </SheetContent>
