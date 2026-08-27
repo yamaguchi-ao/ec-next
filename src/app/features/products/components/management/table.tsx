@@ -1,5 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoreHorizontalIcon, Pencil, Trash2 } from "lucide-react";
@@ -50,13 +51,13 @@ export default function ListTable() {
 
     return (
         <>
-            <ScrollArea className="h-[calc(100vh-18rem)] rounded-lg border">
+            <ScrollArea className="h-[calc(100vh-18rem)] rounded-lg border bg-background">
                 <Table>
-                    <TableHeader className="bg-chart-4 pointer-events-none">
-                        <TableRow className="text-[20px]">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
+                        <TableRow>
                             {headerMap?.map((item, index) => {
                                 return (
-                                    <TableHead key={index} className={`text-white text-center ${item.value === "商品名" && "w-80"}`}>{item.value}</TableHead>
+                                    <TableHead key={index} className={`text-center ${item.value === "商品名" && "min-w-64"}`}>{item.value}</TableHead>
                                 );
                             })}
                         </TableRow>
@@ -64,13 +65,15 @@ export default function ListTable() {
                     <TableBody className="">
                         {products && products.map((item, idx) => {
                             return (
-                                <TableRow key={idx} className={`text-[18px] ${idx % 2 !== 0 ? "bg-chart-2/20 hover:bg-chart-2/30" : "hover:bg-muted"}`}>
-                                    <TableCell className="text-center border-r border-border">{item.name}</TableCell>
-                                    <TableCell className="text-center border-r border-border">{item.category?.name}</TableCell>
-                                    <TableCell className="text-right border-r border-border">¥ {item.price?.toLocaleString("ja-JP")}</TableCell>
-                                    <TableCell className="text-right border-r border-border">{item.count?.toLocaleString("ja-JP")}</TableCell>
-                                    <TableCell className="text-center border-r border-border">{item.is_on_sale ? "販売中" : "未発売"}</TableCell>
-                                    <TableCell className="text-center w-25">
+                                <TableRow key={idx} className="group">
+                                    <TableCell className="font-medium">{item.name}</TableCell>
+                                    <TableCell className="text-muted-foreground">{item.category?.name ?? "未分類"}</TableCell>
+                                    <TableCell className="text-right tabular-nums">¥ {item.price?.toLocaleString("ja-JP")}</TableCell>
+                                    <TableCell className={`text-right tabular-nums ${item.count !== undefined && item.count <= 5 ? "font-semibold text-destructive" : ""}`}>{item.count?.toLocaleString("ja-JP")}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant={item.is_on_sale ? "secondary" : "outline"}>{item.is_on_sale ? "販売中" : "販売停止"}</Badge>
+                                    </TableCell>
+                                    <TableCell className="w-25 text-center">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger render={
                                                 <Button variant="ghost" size="icon" className="size-8">
@@ -111,8 +114,10 @@ export default function ListTable() {
                                 </TableRow>
                             )
                         })}
-                        {/* 新規登録用 */}
-                        <TableRow>
+                        {products.length === 0 && <TableRow>
+                            <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">該当する商品がありません。</TableCell>
+                        </TableRow>}
+                        <TableRow className="bg-muted/30">
                             <TableCell className="-p-2 h-10" colSpan={6}>
                                 <RegisterSheet />
                             </TableCell>
