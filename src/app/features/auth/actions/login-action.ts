@@ -3,11 +3,10 @@
 import z from "zod"
 import prisma from "@/lib/prisma"
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
-import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
-import { getCurrentUser } from "@/lib/auth"
-
+import { createToken, getCurrentUser } from "@/lib/jwt/auth"
+import { FieldErrors } from "@/types/types"
+import { setAuthCookie } from "@/lib/jwt/cookie"
 
 // パスワード桁数下限
 const MIN_DIGIT = 8;
@@ -17,17 +16,13 @@ const schema = z.object({
     password: z.string().min(MIN_DIGIT, { message: "8桁以上入力して下さい。" }).trim(),
 });
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const production = process.env.NODE_ENV === "production";
-
 export type formState = {
     success: boolean,
     message: string,
-    fieldErrors?: z.infer<typeof schema>
+    fieldErrors?: FieldErrors
 }
 
 export async function loginAction(_prevState: formState, formData: FormData, adminFlg: boolean) {
-    const cookie = await cookies();
     const user = await getCurrentUser();
 
     if (user) {
@@ -68,25 +63,11 @@ export async function loginAction(_prevState: formState, formData: FormData, adm
             const passMatch = await bcrypt.compare(loginData.password, user.password);
 
             if (passMatch) {
-                if (JWT_SECRET) {
-                    const token = jwt.sign({
-                        id: user.id,
-                        username: user.username,
-                        admin: user.admin
-                    }, JWT_SECRET, { algorithm: "HS256", expiresIn: "1h" });
 
-                    // cookieにJWTを登録しておく
-                    cookie.set("auth_token", token, {
-                        httpOnly: true,
-                        secure: production ? true : false,
-                        sameSite: "strict",
-                        path: "/",
-                        maxAge: 3600
-                    });
-                } else {
-                    console.log("JWT_SECRETが設定されていません。");
-                    return { success: false, message: 'ログインに失敗しました。' };
-                }
+                // JWTトークン登録
+                const token = await createToken({ id: user.id, username: user.username, admin: user.admin })
+                // cookieにJWTを登録しておく
+                await setAuthCookie(token);
 
                 // cookieにセットする
                 if (adminFlg) {

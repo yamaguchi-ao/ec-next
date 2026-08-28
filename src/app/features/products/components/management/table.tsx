@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontalIcon, Pencil, Trash2 } from "lucide-react";
+import { LucideArchiveX, MoreHorizontalIcon, SquarePen } from "lucide-react";
 import RegisterSheet from "./sheet";
 import { managementTitle } from "@/types/products";
 import { useRouter } from "next/navigation";
@@ -71,7 +71,14 @@ export default function ListTable() {
                                     <TableCell className="text-right tabular-nums">¥ {item.price?.toLocaleString("ja-JP")}</TableCell>
                                     <TableCell className={`text-right tabular-nums ${item.count !== undefined && item.count <= 5 ? "font-semibold text-destructive" : ""}`}>{item.count?.toLocaleString("ja-JP")}</TableCell>
                                     <TableCell className="text-center">
-                                        <Badge variant={item.is_on_sale ? "secondary" : "outline"}>{item.is_on_sale ? "販売中" : "販売停止"}</Badge>
+                                        <Badge
+                                            variant="outline"
+                                            className={item.is_on_sale
+                                                ? "border-green-200 bg-green-100 text-green-800"
+                                                : "border-gray-200 bg-gray-100 text-gray-600"}
+                                        >
+                                            {item.is_on_sale ? "販売中" : "販売停止"}
+                                        </Badge>
                                     </TableCell>
                                     <TableCell className="w-25 text-center">
                                         <DropdownMenu>
@@ -81,12 +88,12 @@ export default function ListTable() {
                                                     <span className="sr-only">Open menu</span></Button>} />
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem className="hover:cursor-pointer" onClick={() => handleEdit(item.id!)}>
-                                                    <Pencil />
+                                                    <SquarePen />
                                                     編集
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator className="bg-gray-400/30" />
                                                 <DropdownMenuItem className="hover:cursor-pointer" variant="destructive" onClick={(event) => handleOpenDialog(item.id!, event)}>
-                                                    <Trash2 />削除
+                                                    <LucideArchiveX />販売停止
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -94,10 +101,10 @@ export default function ListTable() {
                                             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                                                 <DialogContent>
                                                     <DialogHeader>
-                                                        <DialogTitle>商品の削除</DialogTitle>
+                                                        <DialogTitle>商品の販売停止</DialogTitle>
                                                     </DialogHeader>
                                                     <DialogDescription>
-                                                        商品の削除を行います。本当に削除していいですか？
+                                                        商品の販売停止を行います。本当に削除していいですか？
                                                     </DialogDescription>
                                                     <DialogFooter>
                                                         <DialogClose render={<Button variant="outline" onClick={() => { setIsDialogOpen(false) }}>いいえ</Button>} />

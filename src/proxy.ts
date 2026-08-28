@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { getCurrentUser } from './lib/jwt/auth';
+import { getAuthCookie } from './lib/jwt/cookie';
 
 export default async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
@@ -12,25 +11,30 @@ export default async function proxy(req: NextRequest) {
     const isPublicPath = publicPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
     const isProtectedPath = protectedPath.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-    const authToken = req.cookies.get("auth_token")?.value;
     const currentUrl = new URL("/login", req.url);
+    const token = await getAuthCookie();
 
-    if (!authToken && isProtectedPath) {
+    if (!token && isProtectedPath) {
         currentUrl.searchParams.set("reason", "session_expired");
         return NextResponse.redirect(currentUrl);
     }
 
-    if (authToken) {
+    if (token) {
         try {
-            const secret = new TextEncoder().encode(JWT_SECRET);
-            const { payload } = await jwtVerify(authToken, secret);
+            const user = await getCurrentUser();
+
+            if (!user) {
+                currentUrl.searchParams.set("reason", "session_expired");
+                return NextResponse.redirect(currentUrl);
+            }
+
 
             if (isPublicPath) {
                 return NextResponse.redirect(new URL("/products/list", req.url));
             }
 
             // 管理者チェック
-            if (pathname.startsWith("/dashboard") && payload.admin !== true) {
+            if (pathname.startsWith("/dashboard") && user.admin !== true) {
                 return NextResponse.redirect(new URL("/products/list", req.url));
             }
         } catch {

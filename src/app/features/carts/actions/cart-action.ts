@@ -1,6 +1,6 @@
 "use server"
 
-import { requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/jwt/auth";
 import prisma from "@/lib/prisma";
 import z from "zod";
 

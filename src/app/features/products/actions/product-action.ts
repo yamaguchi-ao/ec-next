@@ -1,6 +1,6 @@
 "use server"
 
-import { getCurrentUser, requireAdmin } from "@/lib/auth";
+import { getCurrentUser, requireAdmin } from "@/lib/jwt/auth";
 import prisma from "@/lib/prisma";
 import { findProduct } from "@/lib/prisma/query";
 import { Prisma } from "@prisma/client";
@@ -131,7 +131,7 @@ export async function productRegister(_prevState: unknown, formdata: FormData) {
                 } else {
                     if (registData.inputCategory) {
 
-                        const category = await prisma.category.findFirst({
+                        const category = await tx.category.findFirst({
                             where: { name: registData.inputCategory }
                         });
 
@@ -178,12 +178,13 @@ export async function productRegister(_prevState: unknown, formdata: FormData) {
 
 // 商品の更新
 export async function productUpdate(_prevState: unknown, formdata: FormData, id: string) {
+
     const updateData = {
         name: formdata.get("name") as string,
         category: formdata.get("category") as string,
         price: Number(formdata.get("price")),
         count: Number(formdata.get("count")),
-        status: Boolean(formdata.get("status")),
+        status: formdata.get("status") === "true",
         description: formdata.get("description") as string,
     }
 
@@ -223,14 +224,17 @@ export async function productUpdate(_prevState: unknown, formdata: FormData, id:
 export async function productDelete(productId: string) {
     try {
         await requireAdmin();
-        await prisma.products.delete({
-            where: { id: productId }
+        await prisma.products.update({
+            where: { id: productId },
+            data: {
+                is_on_sale: false
+            }
         });
-        return { success: true, message: "商品を削除しました。" };
+        return { success: true, message: "商品を販売停止にしました。" };
     } catch (e) {
         if (e instanceof Error) {
             console.log("エラー：", e.message);
-            return { success: false, message: e.message ? e.message : "商品の削除に失敗しました。" };
+            return { success: false, message: e.message ? e.message : "商品の販売停止に失敗しました。" };
         }
     }
 }
