@@ -6,27 +6,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { category, products } from "@prisma/client";
 import { ChevronLeft, Minus, Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { cartUpsert } from "@/app/features/carts/actions/cart-action";
+import { useCartCount } from "@/components/providers/cart-count-provider";
 
 interface detailsProp {
-    data: products
+    data?: products
     categories: category[]
 }
 
 export default function ProductListDetailsForm({ data, categories }: detailsProp) {
     const router = useRouter();
+    const { refreshCartCount } = useCartCount();
+
+    if (!data) {
+        toast.add({
+            type: "error",
+            description: "商品が見つかりませんでした。"
+        });
+        redirect("/products/list");
+    }
 
     // 商品ID取得
-    const productId = data.id;
+    const productId = data?.id;
 
     // カテゴリー取得
-    const matchedCategory = categories.find((item) => data.categoryId === item.id);
+    const matchedCategory = categories.find((item) => data?.categoryId === item.id);
 
     // 数量指定用
-    const maxQuantity = data.count > 0 ? data.count : 1;
+    const maxQuantity = Math.max(1, data?.count ?? 1);
     const [quantity, setQuantity] = useState(1);
 
     // 数量増減
@@ -34,7 +44,7 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
         setQuantity((prev) => Math.min(maxQuantity, Math.max(1, prev + change)));
     };
 
-    const [state, addCartAction, pending] = useActionState(cartUpsert, null);
+    const [state, addCartAction] = useActionState(cartUpsert, null);
 
     useEffect(() => {
         if (!state) {
@@ -43,7 +53,7 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
 
         toast.add({
             type: state.success ? "success" : "error",
-            description: (
+            description: state.fieldErrors ? state.fieldErrors.quantity : (
                 <span className="whitespace-pre-line">
                     {state.message.replace(/\\n/g, "\n")}
                 </span>
@@ -53,7 +63,15 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
         if (state.success) {
             router.push("/products/list");
         }
-    }, [state, router])
+
+        // カートの増減
+        const effect = async () => {
+            if (state.success) {
+                await refreshCartCount();
+            }
+        }
+        void effect();
+    }, [state, router]);
 
     return (
         <>
@@ -64,7 +82,10 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
                             <div className="flex justify-between">
                                 <div className="flex items-center gap-3">
                                     <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => router.back()}></ChevronLeft>
-                                    <CardTitle className="text-3xl">商品詳細</CardTitle>
+                                    <div>
+                                        <CardTitle className="text-2xl">商品詳細</CardTitle>
+                                        <CardDescription className="mt-1">商品の詳細を確認したり、個数選択をしてカートへの追加が行えます。</CardDescription>
+                                    </div>
                                 </div>
                             </div>
                         </CardHeader>
@@ -77,7 +98,7 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
                                     <div className="flex flex-col w-full">
                                         <form action={addCartAction}>
                                             <Input type="hidden" name="productId" value={productId}></Input>
-                                            <Label className="text-3xl">{data.name}</Label>
+                                            <Label className="text-3xl">{data?.name}</Label>
 
                                             <div className="flex gap-1">
                                                 <Label> カテゴリー：</Label>
@@ -86,19 +107,19 @@ export default function ProductListDetailsForm({ data, categories }: detailsProp
 
                                             <div className="flex gap-1">
                                                 <Label> 在庫：</Label>
-                                                <Label className="text-[18px]">{data.count > 0 ? `残り${data.count}点` : "売り切れ中"}</Label>
+                                                <Label className="text-[18px]">{(data?.count ?? 0) > 0 ? `残り${data?.count ?? 0}点` : "売り切れ中"}</Label>
                                             </div>
 
                                             <div className="grid gap-3 py-3">
                                                 <Label className="text-[18px]">商品説明</Label>
-                                                <Label className="">{data.description ? data.description : "特になし"}</Label>
+                                                <Label className="">{data?.description ? data.description : "特になし"}</Label>
                                             </div>
                                             <div className="flex justify-end items-end py-3">
                                                 <Label className="text-[20px]">価格(税込)</Label>
                                                 <p className="text-[22px] pl-2 pr-1">¥</p>
-                                                <Label className="text-4xl">{data.price.toLocaleString()}</Label>
+                                                <Label className="text-4xl">{data?.price.toLocaleString()}</Label>
                                             </div>
-                                            {!data.is_on_sale ? (
+                                            {!data?.is_on_sale ? (
                                                 <div className="h-full rounded-xl p-8 text-center text-slate-500">
                                                     SOLD OUT
                                                 </div>

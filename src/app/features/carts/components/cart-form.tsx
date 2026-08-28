@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { deleteCartItem } from "../actions/cart-action";
 import { toast } from "@/components/ui/toast";
+import { useCartCount } from "@/components/providers/cart-count-provider";
 
 type CartFormProps = {
     items: {
@@ -14,16 +16,25 @@ type CartFormProps = {
         products: {
             name: string;
             price: number;
+            count: number;
         };
         quantity: number;
     }[];
 };
 
-
 export default function CartForm({ items }: CartFormProps) {
-    const router = useRouter();
 
-    const subtotal = items.reduce((sum, item) => sum + item.products.price * item.quantity, 0);
+    const router = useRouter();
+    const { refreshCartCount } = useCartCount();
+
+    const [quantities, setQuantities] = useState<Record<string, number>>(
+        () => Object.fromEntries(items.map((item) => [item.id, item.quantity]))
+    );
+
+    const subtotal = items.reduce(
+        (sum, item) => sum + item.products.price * (quantities[item.id] ?? item.quantity),
+        0
+    );
     const shippingFee = items.length > 0 ? 300 : 0;
     const total = subtotal + shippingFee;
 
@@ -39,6 +50,7 @@ export default function CartForm({ items }: CartFormProps) {
                 )
             });
             if (result.success) {
+                await refreshCartCount();
                 router.refresh();
             }
         }
@@ -58,12 +70,12 @@ export default function CartForm({ items }: CartFormProps) {
                 <div className="flex">
                     <CardContent className="w-full">
                         {items.length === 0 ? (
-                            <div className="rounded-xl p-8 text-center text-slate-500">
-                                カートは空です。
+                            <div className="flex justify-center rounded-xl p-8 items-center text-slate-500 h-[calc(100vh-27rem)] text-[28px]">
+                                <p>カートは空です</p>
                             </div>
                         ) : (
                             <ScrollArea>
-                                <div className="space-y-4 max-h-60">
+                                <div className="space-y-4 max-h-[calc(100vh-27rem)]">
                                     {items.map((item, index) => (
                                         <div
                                             key={index}
@@ -71,11 +83,12 @@ export default function CartForm({ items }: CartFormProps) {
                                         >
                                             <div className="h-20 w-20 overflow-hidden rounded-lg bg-slate-100">
                                                 {item ? (
-                                                    <img
-                                                        src={"test"}
-                                                        alt={"test"}
-                                                        className="h-full w-full object-cover"
-                                                    />
+                                                    // <img
+                                                    //     src={"test"}
+                                                    //     alt={"test"}
+                                                    //     className="h-full w-full object-cover"
+                                                    // />
+                                                    <></>
                                                 ) : (
                                                     <div className="flex h-full items-center justify-center text-xs text-slate-400">
                                                         No Image
@@ -85,7 +98,38 @@ export default function CartForm({ items }: CartFormProps) {
 
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-base font-semibold text-slate-800">{item.products.name}</p>
-                                                <p className="mt-1 text-sm text-slate-500">数量: {item.quantity}</p>
+                                                <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                                                    <span>数量:</span>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="size-7"
+                                                        disabled={(quantities[item.id] ?? item.quantity) <= 1}
+                                                        onClick={() => setQuantities((current) => ({
+                                                            ...current,
+                                                            [item.id]: Math.max(1, (current[item.id] ?? item.quantity) - 1),
+                                                        }))}
+                                                        aria-label={`${item.products.name}の数量を減らす`}
+                                                    >
+                                                        −
+                                                    </Button>
+                                                    <span className="min-w-5 text-center">{quantities[item.id] ?? item.quantity}</span>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="size-7"
+                                                        disabled={(quantities[item.id] ?? item.quantity) >= item.products.count}
+                                                        onClick={() => setQuantities((current) => ({
+                                                            ...current,
+                                                            [item.id]: Math.max(1, (current[item.id] ?? item.quantity) + 1),
+                                                        }))}
+                                                        aria-label={`${item.products.name}の数量を減らす`}
+                                                    >
+                                                        +
+                                                    </Button>
+                                                </div>
                                             </div>
 
                                             <div className="text-right">
@@ -94,7 +138,7 @@ export default function CartForm({ items }: CartFormProps) {
                                                         style: "currency",
                                                         currency: "JPY",
                                                         maximumFractionDigits: 0,
-                                                    }).format(item.products.price * item.quantity)}
+                                                    }).format(item.products.price * (quantities[item.id] ?? item.quantity))}
                                                 </p>
                                                 <p className="text-xs text-slate-500">
                                                     {new Intl.NumberFormat("ja-JP", {

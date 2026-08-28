@@ -3,28 +3,56 @@ import { jwtVerify } from 'jose'
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-interface UserInfo {
+export interface UserInfo {
     id: number;
     username: string;
     admin: boolean;
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<UserInfo | null> {
 
     // ユーザ情報取得(cookieからjwt認証)
     const cookie = await cookies();
     const token = cookie.get("auth_token")?.value;
+
+    if (!token || !JWT_SECRET) return null;
+
     try {
-        if (token) {
-            // JWTトークンの検証
-            const secret = new TextEncoder().encode(JWT_SECRET);
-            const { payload } = await jwtVerify(token!, secret);
-            return { id: payload.id, username: payload.username, admin: payload.admin } as UserInfo;
-        } else {
-            return null;
+        const secret = new TextEncoder().encode(JWT_SECRET);
+        const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+
+        if (
+            typeof payload.id !== "number" ||
+            typeof payload.username !== "string" ||
+            typeof payload.admin !== "boolean"
+        ) {
+            throw new Error("JWT payloadが不正です。");
+        }
+
+        return {
+            id: payload.id,
+            username: payload.username,
+            admin: payload.admin
         }
     } catch (error) {
         console.log("エラー内容：", error);
+        cookieStore.delete("auth_token");
         return null;
     }
+}
+
+export async function requireUser(): Promise<UserInfo> {
+    const user = await getCurrentUser();
+    if (!user) {
+        throw Error("認証が必要です。");
+    }
+    return user;
+}
+
+export async function requireAdmin(): Promise<UserInfo> {
+    const user = await requireUser();
+    if (!user.admin) {
+        throw Error("管理者権限が必要です。");
+    }
+    return user;
 }

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dispatch, useActionState, useState } from "react";
+import { useActionState, useState } from "react";
 import { productRegister } from "../../actions/product-action";
 import { toast } from "@/components/ui/toast";
 import { Field, FieldError, FieldGroup } from "@/components/ui/field";
@@ -30,7 +30,7 @@ export default function RegisterSheet() {
     const [select, setSelect] = useState("select");
 
     const [state, register, pending] = useActionState(
-        async (prevState: any, formData: FormData) => {
+        async (prevState: unknown, formData: FormData) => {
             const result = await productRegister(prevState, formData);
             if (result?.fieldErrors) {
                 setOpen(false);
@@ -63,99 +63,110 @@ export default function RegisterSheet() {
                     </Button>
                 } />
             </div>
-            <SheetContent>
+            <SheetContent className="flex w-full flex-col sm:max-w-xl">
                 <SheetHeader>
                     <SheetTitle className="text-2xl">商品登録</SheetTitle>
+                    <p className="text-sm text-muted-foreground">新しい商品情報を入力してください。</p>
                 </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4 overflow-y-scroll">
+                <div className="min-h-0 flex-1 overflow-y-auto px-4">
                     <form id="product-form" action={register}>
-                        <FieldGroup>
-                            <Field>
-                                <div className="grid gap-3 py-3">
-                                    <Label htmlFor="name">商品名<p className="text-red-500">*</p></Label>
-                                    <Input name="name" id="name" defaultValue="" disabled={pending} aria-invalid={!!state?.name} />
-                                    <FieldError>{state?.name && errorText(state?.name)}</FieldError>
-                                </div>
-                            </Field>
-                        </FieldGroup>
+                        <div className="rounded-lg border bg-muted/30 p-4">
+                            <p className="mb-3 text-sm font-semibold">基本情報</p>
+                            <FieldGroup>
+                                <Field>
+                                    <div className="grid gap-3 py-3">
+                                        <Label htmlFor="name">商品名<p className="text-red-500">*</p></Label>
+                                        <Input name="name" id="name" defaultValue="" disabled={pending} aria-invalid={!!state?.name} />
+                                        <FieldError>{state?.name && errorText(state?.name)}</FieldError>
+                                    </div>
+                                </Field>
+                            </FieldGroup>
+                        </div>
                         <RadioGroup value={select} onValueChange={setSelect}>
-                            <div className="flex gap-3 py-3">
-                                <div className="flex justify-center items-center gap-2">
-                                    <RadioGroupItem value="select" id="select" />
-                                    <Label htmlFor="select">既存カテゴリー選択</Label>
+                            <div className="rounded-lg border bg-muted/30 p-4 mt-4">
+                                <p className="mb-3 text-sm font-semibold">カテゴリー</p>
+                                <div className="flex flex-col gap-3 sm:flex-row">
+                                    <div className="flex justify-center items-center gap-2">
+                                        <RadioGroupItem value="select" id="select" />
+                                        <Label htmlFor="select">既存カテゴリー</Label>
+                                    </div>
+                                    <div className="flex justify-center items-center gap-2">
+                                        <RadioGroupItem value="register" id="register" />
+                                        <Label htmlFor="register">新規カテゴリー</Label>
+                                    </div>
                                 </div>
-                                <div className="flex justify-center items-center gap-2">
-                                    <RadioGroupItem value="register" id="register" />
-                                    <Label htmlFor="register">新規カテゴリー登録</Label>
-                                </div>
+                                {select === "select" ?
+                                    <FieldGroup>
+                                        <Field>
+                                            <div className="grid gap-3 py-3">
+                                                <Label htmlFor="">カテゴリー<p className="text-red-500">*</p></Label>
+                                                <Select name="selectCategory" id="category" items={selectCategories} >
+                                                    <SelectTrigger className="w-full max-w-70" aria-invalid={!!state?.selectCategory}>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectGroup>
+                                                            <SelectLabel>カテゴリー</SelectLabel>
+                                                            {categories.map((item) => (
+                                                                <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                                                            ))}
+                                                        </SelectGroup>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FieldError>{state?.selectCategory && errorText(state?.selectCategory)}</FieldError>
+                                            </div>
+                                        </Field>
+                                    </FieldGroup>
+                                    :
+                                    <FieldGroup>
+                                        <Field>
+                                            <div className="grid gap-3 py-3">
+                                                <Label htmlFor="">カテゴリー<p className="text-red-500">*</p></Label>
+                                                <Input name="inputCategory" id="category" defaultValue="" disabled={pending} aria-invalid={!!state?.inputCategory} />
+                                                <FieldError>{state?.inputCategory && errorText(state?.inputCategory)}</FieldError>
+                                            </div>
+                                        </Field>
+                                    </FieldGroup>
+                                }
                             </div>
-                            {select === "select" ?
-                                <FieldGroup>
-                                    <Field>
-                                        <div className="grid gap-3 py-3">
-                                            <Label htmlFor="">カテゴリー<p className="text-red-500">*</p></Label>
-                                            <Select name="selectCategory" id="category" items={selectCategories} >
-                                                <SelectTrigger className="w-full max-w-70" aria-invalid={!!state?.selectCategory}>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        <SelectLabel>カテゴリー</SelectLabel>
-                                                        {categories.map((item) => (
-                                                            <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
-                                                        ))}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                            <FieldError>{state?.selectCategory && errorText(state?.selectCategory)}</FieldError>
-                                        </div>
-                                    </Field>
-                                </FieldGroup>
-                                :
-                                <FieldGroup>
-                                    <Field>
-                                        <div className="grid gap-3 py-3">
-                                            <Label htmlFor="">カテゴリー<p className="text-red-500">*</p></Label>
-                                            <Input name="inputCategory" id="category" defaultValue="" disabled={pending} aria-invalid={!!state?.inputCategory} />
-                                            <FieldError>{state?.inputCategory && errorText(state?.inputCategory)}</FieldError>
-                                        </div>
-                                    </Field>
-                                </FieldGroup>
-                            }
                         </RadioGroup>
-                        <FieldGroup>
-                            <Field>
-                                <div className="grid gap-3 py-3">
-                                    <Label htmlFor="price">価格<p className="text-red-500">*</p></Label>
-                                    <Input name="price" id="price" defaultValue="" disabled={pending} aria-invalid={!!state?.price} />
-                                    <FieldError>{state?.price && errorText(state?.price)}</FieldError>
-                                </div>
-                            </Field>
-                        </FieldGroup>
+                        <div className="mt-4 grid gap-4 rounded-lg border bg-muted/30 p-4 sm:grid-cols-2">
+                            <FieldGroup>
+                                <Field>
+                                    <div className="grid gap-3 py-3">
+                                        <Label htmlFor="price">価格<p className="text-red-500">*</p></Label>
+                                        <Input name="price" id="price" defaultValue="" disabled={pending} aria-invalid={!!state?.price} />
+                                        <FieldError>{state?.price && errorText(state?.price)}</FieldError>
+                                    </div>
+                                </Field>
+                            </FieldGroup>
 
-                        <FieldGroup>
-                            <Field>
-                                <div className="grid gap-3 py-3">
-                                    <Label htmlFor="count">入荷数<p className="text-red-500">*</p></Label>
-                                    <Input name="count" id="count" defaultValue="" disabled={pending} aria-invalid={!!state?.count} />
-                                    <FieldError>{state?.count && errorText(state?.count)}</FieldError>
-                                </div>
-                            </Field>
-                        </FieldGroup>
+                            <FieldGroup>
+                                <Field>
+                                    <div className="grid gap-3 py-3">
+                                        <Label htmlFor="count">入荷数<p className="text-red-500">*</p></Label>
+                                        <Input name="count" id="count" defaultValue="" disabled={pending} aria-invalid={!!state?.count} />
+                                        <FieldError>{state?.count && errorText(state?.count)}</FieldError>
+                                    </div>
+                                </Field>
+                            </FieldGroup>
+                        </div>
 
-                        <FieldGroup>
-                            <Field>
-                                <div className="grid gap-3 py-3">
-                                    <Label htmlFor="description">商品説明<p className="text-[11px] text-black/40">※任意</p></Label>
-                                    <Textarea className="h-30" name="description" id="description" defaultValue="" />
-                                    {/* <FieldError>{state?.description && errorText(state?.description)}</FieldError> */}
-                                </div>
-                            </Field>
-                        </FieldGroup>
+                        <div className="mt-4 rounded-lg border bg-muted/30 p-4">
+                            <FieldGroup>
+                                <Field>
+                                    <div className="grid gap-3 py-3">
+                                        <Label htmlFor="description">商品説明<p className="text-[11px] text-black/40">※任意</p></Label>
+                                        <Textarea className="h-30" name="description" id="description" defaultValue="" />
+                                        {/* <FieldError>{state?.description && errorText(state?.description)}</FieldError> */}
+                                    </div>
+                                </Field>
+                            </FieldGroup>
+                        </div>
                     </form>
                 </div>
-                <SheetFooter>
-                    <Button type="submit" form="product-form">商品登録</Button>
+                <SheetFooter className="border-t bg-background">
+                    <Button type="submit" form="product-form" disabled={pending}>商品登録</Button>
                     <SheetClose render={<Button variant="outline">閉じる</Button>} />
                 </SheetFooter>
             </SheetContent>

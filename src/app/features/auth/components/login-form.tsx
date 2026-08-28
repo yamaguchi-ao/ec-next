@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { redirect, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useRef } from "react";
 import { formState, loginAction } from "../actions/login-action";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export default function LoginForm({ adminFlg = false }: { adminFlg?: boolean }) 
     };
 
     const [state, login, isPending] = useActionState(
-        async (prevState: any, formData: FormData) => {
+        async (prevState: unknown, formData: FormData) => {
             const result = await loginAction(prevState as formState, formData, adminFlg);
             if (result?.fieldErrors) {
                 return result?.fieldErrors;

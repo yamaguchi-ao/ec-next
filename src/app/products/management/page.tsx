@@ -8,6 +8,10 @@ export default async function ProductManagementPage() {
     const user = await getCurrentUser();
     const adminFlg = user?.admin;
 
+    if (!user) {
+        redirect("/login");
+    }
+
     if (!adminFlg) {
         redirect("/products/list");
     }
@@ -19,7 +23,7 @@ export default async function ProductManagementPage() {
     return (
         <>
             <title>商品管理</title>
-            <Header username={user?.username!} admin={adminFlg} />
+            <Header username={user.username!} admin={adminFlg} />
             <ProductManagementForm category={categories} />
         </>
     );

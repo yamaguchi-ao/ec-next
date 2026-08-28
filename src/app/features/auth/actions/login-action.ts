@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
+import { getCurrentUser } from "@/lib/auth"
 
 
 // パスワード桁数下限
@@ -26,13 +27,11 @@ export type formState = {
 }
 
 export async function loginAction(_prevState: formState, formData: FormData, adminFlg: boolean) {
-
     const cookie = await cookies();
-    const hasToken = cookie.has("auth_token");
+    const user = await getCurrentUser();
 
-    if (hasToken) {
-        // ログイン済みとする
-        return { success: true, message: 'ログイン済みです。' }
+    if (user) {
+        return { success: true, message: "ログイン済みです。" };
     }
 
     const loginData = {
@@ -81,6 +80,7 @@ export async function loginAction(_prevState: formState, formData: FormData, adm
                         httpOnly: true,
                         secure: production ? true : false,
                         sameSite: "strict",
+                        path: "/",
                         maxAge: 3600
                     });
                 } else {

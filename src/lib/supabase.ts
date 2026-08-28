@@ -1,8 +1,16 @@
 // supabase client
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.NEXT_SECRET_SUPABASE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl) {
+    throw Error("supabaseの設定が出来ていません。");
+}
+
+if (!supabaseAnonKey) {
+    throw Error("supabaseの設定が出来ていません。");
+}
 
 type SupabaseClientSingleton = ReturnType<typeof supabaseClientSingleton>;
 
@@ -11,7 +19,7 @@ const globalForSupabase = global as unknown as {
 }
 
 const supabaseClientSingleton = () => {
-    const supabase = createClient(supabaseUrl, supabaseSecretKey);
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
     return supabase;
 }
 

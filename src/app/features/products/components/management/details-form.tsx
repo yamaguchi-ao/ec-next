@@ -16,15 +16,23 @@ import { productUpdate } from "../../actions/product-action";
 import { toast } from "@/components/ui/toast";
 
 interface detailsProp {
-    data: products
+    data?: products
     categories: category[]
 }
 
 export default function ProductDetailsForm({ data, categories }: detailsProp) {
     const router = useRouter();
 
+    if (!data) {
+        toast.add({
+            type: "error",
+            description: "商品が見つかりませんでした。"
+        });
+        redirect("/products/management");
+    }
+
     // 商品ID取得
-    const productId = data.id;
+    const productId = data?.id;
 
     // 販売状態のステータス用
     const [status, setStatus] = useState(false);
@@ -33,13 +41,13 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
     const [selectCategory, setSelectCategory] = useState<string | null>(null);
 
     useEffect(() => {
-        setStatus(data.is_on_sale);
-        setSelectCategory(data.categoryId ?? "");
+        setStatus(data?.is_on_sale ?? false);
+        setSelectCategory(data?.categoryId ?? "");
     }, []);
 
-    const [state, updateAction, pending] = useActionState(
-        async (prevState: any, formData: FormData) => {
-            const result = await productUpdate(prevState, formData, productId);
+    const [state, updateAction] = useActionState(
+        async (prevState: unknown, formData: FormData) => {
+            const result = await productUpdate(prevState, formData, productId ?? "");
             if (result?.fieldErrors) {
                 return result?.fieldErrors
             } else {
@@ -47,7 +55,7 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                     type: result?.success ? "success" : "error",
                     description: result?.message
                 });
-                if (result.success) {
+                if (result?.success) {
                     redirect("/products/management");
                 }
             }
@@ -78,7 +86,10 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                             <div className="flex justify-between">
                                 <div className="flex items-center gap-3">
                                     <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => router.back()}></ChevronLeft>
-                                    <CardTitle className="text-3xl">商品詳細</CardTitle>
+                                    <div>
+                                        <CardTitle className="text-2xl">商品詳細</CardTitle>
+                                        <CardDescription className="mt-1">商品の編集を行い、価格やカテゴリー、在庫数などの商品情報を管理します。</CardDescription>
+                                    </div>
                                 </div>
                             </div>
                         </CardHeader>
@@ -95,7 +106,7 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                                 <Field>
                                                     <div className="grid gap-3">
                                                         <Label htmlFor="name">商品名<p className="text-red-500">*</p></Label>
-                                                        <Input name="name" id="name" defaultValue={data.name} />
+                                                        <Input name="name" id="name" defaultValue={data?.name} />
                                                         <FieldError>{state?.name && errorText(state?.name)}</FieldError>
                                                     </div>
                                                 </Field>
@@ -128,7 +139,7 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                                 <Field>
                                                     <div className="grid gap-3">
                                                         <Label htmlFor="price">価格<p className="text-red-500">*</p></Label>
-                                                        <Input name="price" id="price" defaultValue={data.price} />
+                                                        <Input name="price" id="price" defaultValue={data?.price} />
                                                         <FieldError>{state?.price && errorText(state?.price)}</FieldError>
                                                     </div>
                                                 </Field>
@@ -137,7 +148,7 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                                 <Field>
                                                     <div className="grid gap-3">
                                                         <Label htmlFor="count">在庫数<p className="text-red-500">*</p></Label>
-                                                        <Input name="count" id="count" defaultValue={data.count} />
+                                                        <Input name="count" id="count" defaultValue={data?.count} />
                                                         <FieldError>{state?.count && errorText(state?.count)}</FieldError>
                                                     </div>
                                                 </Field>
@@ -158,7 +169,7 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                             <Field>
                                                 <div className="grid gap-3 py-3">
                                                     <Label htmlFor="description">商品説明<p className="text-[11px] text-black/40">※任意</p></Label>
-                                                    <Textarea className="h-30 resize-none" name="description" id="description" defaultValue={data.description!} onChange={(e) => e.target.value} />
+                                                    <Textarea className="h-30 resize-none" name="description" id="description" defaultValue={data?.description ?? ""} onChange={(e) => e.target.value} />
                                                 </div>
                                             </Field>
                                         </FieldGroup>

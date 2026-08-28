@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect } from "react"
+import { useActionState } from "react"
 import { formState, SignupAction } from "../actions/signup-action"
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
@@ -13,7 +13,7 @@ import { LogIn } from "lucide-react";
 export default function SignupForm() {
 
     const [state, signup, isPending] = useActionState(
-        async (_prevState: any, formData: FormData) => {
+        async (_prevState: unknown, formData: FormData) => {
             const result = await SignupAction(_prevState as formState, formData);
             if (result?.fieldErrors) {
                 return result?.fieldErrors;
