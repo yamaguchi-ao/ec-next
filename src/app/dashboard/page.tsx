@@ -1,6 +1,6 @@
 import Header from "@/components/layout/header";
 import DashBoardForm from "../features/dashboard/components/dashboard-form";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/jwt/auth";
 import { redirect } from "next/navigation";
 
 export default async function DashBoardPage() {

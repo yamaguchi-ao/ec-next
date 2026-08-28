@@ -1,7 +1,5 @@
-import { cookies } from "next/headers"
-import { jwtVerify } from 'jose'
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { SignJWT, jwtVerify } from 'jose'
+import { deleteAuthCookie, getAuthCookie } from "./cookie";
 
 export interface UserInfo {
     id: number;
@@ -9,16 +7,33 @@ export interface UserInfo {
     admin: boolean;
 }
 
+const jwtSecret = process.env.JWT_SECRET;
+
+if (!jwtSecret) {
+    throw Error("secretの設定が出来ていません。");
+}
+
+// secretのエンコード
+const secret = new TextEncoder().encode(jwtSecret);
+
+// JWTのトークン作成
+export async function createToken({ id, username, admin }: UserInfo) {
+    return await new SignJWT({ id, username, admin })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("1h")
+        .sign(secret);
+}
+
+/** JWT検証 */
 export async function getCurrentUser(): Promise<UserInfo | null> {
 
-    // ユーザ情報取得(cookieからjwt認証)
-    const cookie = await cookies();
-    const token = cookie.get("auth_token")?.value;
+    // cookieから登録したtokenを取得
+    const token = await getAuthCookie();
 
-    if (!token || !JWT_SECRET) return null;
+    if (!token) return null;
 
     try {
-        const secret = new TextEncoder().encode(JWT_SECRET);
         const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
 
         if (
@@ -36,11 +51,12 @@ export async function getCurrentUser(): Promise<UserInfo | null> {
         }
     } catch (error) {
         console.log("エラー内容：", error);
-        cookieStore.delete("auth_token");
+        await deleteAuthCookie();
         return null;
     }
 }
 
+/** 一般ユーザー検証 */
 export async function requireUser(): Promise<UserInfo> {
     const user = await getCurrentUser();
     if (!user) {
@@ -49,6 +65,7 @@ export async function requireUser(): Promise<UserInfo> {
     return user;
 }
 
+/** 管理者ユーザー検証 */
 export async function requireAdmin(): Promise<UserInfo> {
     const user = await requireUser();
     if (!user.admin) {

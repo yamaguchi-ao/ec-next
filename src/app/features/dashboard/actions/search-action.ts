@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin } from "@/lib/jwt/auth";
 import prisma from "@/lib/prisma";
 
 const orderStatusLabels = {

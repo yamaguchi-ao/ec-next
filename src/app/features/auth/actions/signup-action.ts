@@ -3,14 +3,12 @@
 import z from "zod"
 import prisma from "@/lib/prisma"
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
-import { cookies } from "next/headers"
+import { FieldErrors } from "@/types/types"
+import { setAuthCookie } from "@/lib/jwt/cookie"
+import { createToken } from "@/lib/jwt/auth"
 
 // 新規登録用定数
 const MIN_DIGIT = 8;
-// jwtトークン
-const JWT_SECRET = process.env.JWT_SECRET;
-const production = process.env.NODE_ENV === "production";
 
 const schema = z.object({
     username: z.string().min(1, { message: "ユーザーネームを入力してください" }),
@@ -25,12 +23,10 @@ const schema = z.object({
 export type formState = {
     success: boolean,
     message: string,
-    fieldErrors?: z.infer<typeof schema>
+    fieldErrors?: FieldErrors
 }
 
 export async function SignupAction(_prevState: formState, formData: FormData) {
-
-    const cookie = await cookies();
 
     const userData = {
         username: formData.get("username") as string,
@@ -66,23 +62,11 @@ export async function SignupAction(_prevState: formState, formData: FormData) {
                     }
                 });
 
-                if (JWT_SECRET) {
-                    const token = jwt.sign({
-                        id: user.id,
-                        username: user.username,
-                        admin: user.admin
-                    }, JWT_SECRET, { algorithm: "HS256", expiresIn: "1h" });
+                // JWTトークンの登録
+                const token = await createToken({ id: user.id, username: user.username, admin: user.admin });
+                // cookieにJWTを登録しておく
+                await setAuthCookie(token);
 
-                    // cookieにJWTを登録しておく
-                    cookie.set("auth_token", token, {
-                        httpOnly: true,
-                        secure: production ? true : false,
-                        sameSite: "strict",
-                        maxAge: 3600
-                    });
-                } else {
-                    return { success: false, message: '設定が出来ていません。' };
-                }
                 return { success: true, message: '新規登録が完了しました。' };
             }
         } catch (e) {

@@ -15,3 +15,10 @@ export type ProductType = {
     created_at?: Date;
     updated_at?: Date;
 }
+
+export type FieldErrors = {
+    username?: string[];
+    email?: string[];
+    password?: string[];
+    confirm?: string[];
+}

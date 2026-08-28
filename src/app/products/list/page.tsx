@@ -2,7 +2,7 @@ import Header from "@/components/layout/header";
 import ProductListForm from "../../features/products/components/list/list-form";
 import { redirect } from "next/navigation";
 import { getCategories } from "@/app/features/products/actions/category-action";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/jwt/auth";
 
 export default async function ProductsListPage() {
     const user = await getCurrentUser();

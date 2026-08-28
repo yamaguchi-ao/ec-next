@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/jwt/auth";
 import prisma from "@/lib/prisma";
 import { findProduct } from "@/lib/prisma/query";
 import { Prisma } from "@prisma/client";
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     // cookie認証
     if (!user) {
-        return NextResponse.json({ message: "認証に失敗しました。", }, { status: 500 });
+        return NextResponse.json({ message: "認証に失敗しました。", }, { status: 401 });
     }
 
     const searchParams = req.nextUrl.searchParams;
