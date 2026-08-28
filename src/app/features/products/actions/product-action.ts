@@ -184,7 +184,7 @@ export async function productUpdate(_prevState: unknown, formdata: FormData, id:
         category: formdata.get("category") as string,
         price: Number(formdata.get("price")),
         count: Number(formdata.get("count")),
-        status: formdata.get("status") === "true",
+        status: formdata.get("status") === "on",
         description: formdata.get("description") as string,
     }
 

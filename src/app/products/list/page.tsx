@@ -23,7 +23,7 @@ export default async function ProductsListPage() {
     return (
         <>
             <title>商品一覧</title>
-            <Header username={user.username!} admin={adminFlg} />
+            <Header id={user.id} username={user.username!} admin={adminFlg} />
             <ProductListForm category={categories} />
         </>
     );

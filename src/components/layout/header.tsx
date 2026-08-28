@@ -1,14 +1,14 @@
 "use client";
 
 import { logoutAction } from "@/app/features/auth/actions/logout-action";
-import { Button } from "../ui/button";
 import { UserType } from "@/types/types";
 import { redirect, useRouter } from "next/navigation";
 import { toast } from "../ui/toast";
-import { CircleUser, LogOut, MapPin, ShoppingCart } from "lucide-react";
+import { CircleUser, KeyRound, LogOut, MapPin, ShoppingCart, UserRoundPen } from "lucide-react";
 import Image from "next/image";
 import logo from "@/public/ecsite-title.png";
 import { useCartCount } from "../providers/cart-count-provider";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 export default function Header({ username, admin }: UserType) {
 
@@ -64,11 +64,28 @@ export default function Header({ username, admin }: UserType) {
                         )}
                     </div>
 
-                    <CircleUser className="invert size-8" />
-                    <Button onClick={handleLogout}>
-                        ログアウト
-                        <LogOut className="ml-2 h-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            aria-label="アカウントメニューを開く"
+                            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        >
+                            <CircleUser className="invert size-8" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => router.push("/account")}>
+                                <UserRoundPen />
+                                アカウント情報
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push("/account/password")}>
+                                <KeyRound />
+                                パスワード変更
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleLogout}>
+                                <LogOut />
+                                ログアウト
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </header>
