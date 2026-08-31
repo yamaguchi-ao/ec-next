@@ -29,7 +29,7 @@ export default async function detailsPage({ params }: { params: Promise<{ id: st
     return (
         <>
             <title>商品詳細</title>
-            <Header username={user.username!} admin={adminFlg} />
+            <Header id={user.id} username={user.username!} admin={adminFlg} />
             <ProductDetailsForm data={product} categories={categories} />
         </>
     );

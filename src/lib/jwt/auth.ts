@@ -1,11 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { deleteAuthCookie, getAuthCookie } from "./cookie";
-
-export interface UserInfo {
-    id: number;
-    username: string;
-    admin: boolean;
-}
+import { UserType } from '@/types/types';
+import prisma from '../prisma';
 
 const jwtSecret = process.env.JWT_SECRET;
 
@@ -17,7 +13,7 @@ if (!jwtSecret) {
 const secret = new TextEncoder().encode(jwtSecret);
 
 // JWTのトークン作成
-export async function createToken({ id, username, admin }: UserInfo) {
+export async function createToken({ id, username, admin }: UserType) {
     return await new SignJWT({ id, username, admin })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
@@ -26,7 +22,7 @@ export async function createToken({ id, username, admin }: UserInfo) {
 }
 
 /** JWT検証 */
-export async function getCurrentUser(): Promise<UserInfo | null> {
+export async function getCurrentUser(): Promise<UserType | null> {
 
     // cookieから登録したtokenを取得
     const token = await getAuthCookie();
@@ -44,10 +40,26 @@ export async function getCurrentUser(): Promise<UserInfo | null> {
             throw new Error("JWT payloadが不正です。");
         }
 
+        const address = await prisma.address.findFirst({
+            where: { user_id: payload.id },
+            select: {
+                post_code: true,
+                address1: true,
+                address2: true,
+                phone: true
+            }
+        });
+
         return {
             id: payload.id,
             username: payload.username,
-            admin: payload.admin
+            admin: payload.admin,
+            address: {
+                postCode: address?.post_code ?? "",
+                address1: address?.address1 ?? "",
+                address2: address?.address2 ?? "",
+                phone: address?.phone ?? "",
+            }
         }
     } catch (error) {
         console.log("エラー内容：", error);
@@ -57,8 +69,9 @@ export async function getCurrentUser(): Promise<UserInfo | null> {
 }
 
 /** 一般ユーザー検証 */
-export async function requireUser(): Promise<UserInfo> {
+export async function requireUser(): Promise<UserType> {
     const user = await getCurrentUser();
+
     if (!user) {
         throw Error("認証が必要です。");
     }
@@ -66,7 +79,7 @@ export async function requireUser(): Promise<UserInfo> {
 }
 
 /** 管理者ユーザー検証 */
-export async function requireAdmin(): Promise<UserInfo> {
+export async function requireAdmin(): Promise<UserType> {
     const user = await requireUser();
     if (!user.admin) {
         throw Error("管理者権限が必要です。");

@@ -1,7 +1,13 @@
 export type UserType = {
-    id?: number,
+    id: number,
     username: string,
-    admin?: boolean
+    admin?: boolean,
+    address?: {
+        postCode: string,
+        address1: string,
+        address2: string,
+        phone: string
+    }
 }
 
 export type ProductType = {
@@ -21,4 +27,10 @@ export type FieldErrors = {
     email?: string[];
     password?: string[];
     confirm?: string[];
+}
+
+export type FormState = {
+    success: boolean
+    message: string
+    fieldErrors?: Record<string, string[] | undefined>
 }

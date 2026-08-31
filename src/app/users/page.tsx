@@ -1,10 +1,10 @@
-import { getCategories } from "@/app/features/products/actions/category-action";
-import ProductManagementForm from "@/app/features/products/components/management/management-form";
 import Header from "@/components/layout/header";
 import { getCurrentUser } from "@/lib/jwt/auth";
 import { redirect } from "next/navigation";
+import UserForm from "../features/users/components/list-form";
 
-export default async function ProductManagementPage() {
+
+export default async function UserManagementPage() {
     const user = await getCurrentUser();
     const adminFlg = user?.admin;
 
@@ -16,15 +16,11 @@ export default async function ProductManagementPage() {
         redirect("/products/list");
     }
 
-    // カテゴリーの取得
-    const categoryResult = await getCategories();
-    const categories = categoryResult?.data ? categoryResult.data : [];
-
     return (
         <>
             <title>商品管理</title>
             <Header id={user.id} username={user.username!} admin={adminFlg} />
-            <ProductManagementForm category={categories} />
+            <UserForm />
         </>
     );
 }
