@@ -6,7 +6,7 @@ export default async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     const publicPaths = ["/login", "/signup"];
-    const protectedPath = ["/products", "/dashboard", "/users", "/cart", "/user"];
+    const protectedPath = ["/products", "/dashboard", "/cart", "/users", "/account"];
 
     const isPublicPath = publicPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
     const isProtectedPath = protectedPath.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -53,6 +53,7 @@ export const config = {
         '/user/:path*',
         '/dashboard/:path*',
         '/cart/:path*',
+        '/account/:path*',
         '/((?!signup|api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ]
 }

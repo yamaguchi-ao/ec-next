@@ -20,7 +20,7 @@ export default async function ProductsListPage() {
     return (
         <>
             <title>カート詳細</title>
-            <Header username={user.username} admin={adminFlg} />
+            <Header id={user.id} username={user.username} admin={adminFlg} address={user.address} />
             <CartForm items={items} />
         </>
     );

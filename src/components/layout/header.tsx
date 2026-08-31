@@ -10,7 +10,7 @@ import logo from "@/public/ecsite-title.png";
 import { useCartCount } from "../providers/cart-count-provider";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
-export default function Header({ username, admin }: UserType) {
+export default function Header({ username, admin, address }: UserType) {
 
     const router = useRouter();
     const { cartItemsCount } = useCartCount();
@@ -44,8 +44,8 @@ export default function Header({ username, admin }: UserType) {
                                     <p>お届け先</p>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <p>〒001-0000</p>{/* ここはのちに取得した値を入れる*/}
-                                    <p>東京都千代田区</p>{/* ここはのちに取得した値を入れる*/}
+                                    <p>〒{address?.postCode}</p>
+                                    <p>{address?.address1}</p>
                                 </div>
                             </div>
                         </>)}
@@ -67,15 +67,16 @@ export default function Header({ username, admin }: UserType) {
                     <DropdownMenu>
                         <DropdownMenuTrigger
                             aria-label="アカウントメニューを開く"
-                            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white"
-                        >
+                            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white">
                             <CircleUser className="invert size-8" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem onClick={() => router.push("/account")}>
-                                <UserRoundPen />
-                                アカウント情報
-                            </DropdownMenuItem>
+                            {!admin && (
+                                <DropdownMenuItem onClick={() => router.push("/account")}>
+                                    <UserRoundPen />
+                                    アカウント情報
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => router.push("/account/password")}>
                                 <KeyRound />
                                 パスワード変更

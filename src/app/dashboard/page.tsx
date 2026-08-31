@@ -15,7 +15,7 @@ export default async function DashBoardPage() {
     return (
         <>
             <title>ダッシュボード</title>
-            <Header username={user.username} admin={user.admin} />
+            <Header id={user.id} username={user.username} admin={user.admin} />
             <DashBoardForm />
         </>
     )

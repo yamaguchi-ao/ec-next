@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { findProduct } from "@/lib/prisma/query";
 import { Prisma } from "@prisma/client";
 import z from "zod"
+import { FormState } from "@/types/types"
 
 const schema = z.object({
     name: z.string().min(1, "商品名を入力してください。"),
@@ -13,12 +14,6 @@ const schema = z.object({
     price: z.number().min(1, "価格を入力してください。"),
     count: z.number().min(1, "入荷数を入力してください。"),
 });
-
-export type formState = {
-    success: boolean,
-    message: string,
-    fieldErrors?: z.infer<typeof schema>
-}
 
 // 商品の取得
 export async function getProducts(search: string, page?: number) {
@@ -177,9 +172,10 @@ export async function productRegister(_prevState: unknown, formdata: FormData) {
 }
 
 // 商品の更新
-export async function productUpdate(_prevState: unknown, formdata: FormData, id: string) {
+export async function productUpdate(_prevState: FormState | null, formdata: FormData): Promise<FormState> {
 
     const updateData = {
+        id: String(formdata.get("id")),
         name: formdata.get("name") as string,
         category: formdata.get("category") as string,
         price: Number(formdata.get("price")),
@@ -194,29 +190,30 @@ export async function productUpdate(_prevState: unknown, formdata: FormData, id:
     if (!issue.success) {
         const validation = z.flattenError(issue.error);
         return { success: false, message: "商品の更新に失敗しました。", fieldErrors: validation.fieldErrors };
-    } else {
-        try {
-            // 認証
-            await requireAdmin();
-            await prisma.products.update({
-                where: { id: id },
-                data: {
-                    name: updateData.name,
-                    categoryId: updateData.category,
-                    price: updateData.price,
-                    count: updateData.count,
-                    is_on_sale: updateData.status,
-                    description: updateData.description
-                }
-            });
+    }
 
-            return { success: true, message: "商品の更新をしました。" };
-        } catch (e) {
-            if (e instanceof Error) {
-                console.log("エラー：", e.message);
-                return { success: false, message: e.message ? e.message : "商品の更新に失敗しました。" };
+    try {
+        // 認証
+        await requireAdmin();
+        await prisma.products.update({
+            where: { id: updateData.id },
+            data: {
+                name: updateData.name,
+                categoryId: updateData.category,
+                price: updateData.price,
+                count: updateData.count,
+                is_on_sale: updateData.status,
+                description: updateData.description
             }
+        });
+
+        return { success: true, message: "商品の更新をしました。" };
+    } catch (e) {
+        if (e instanceof Error) {
+            console.log("エラー：", e.message);
+            return { success: false, message: e.message ? e.message : "商品の更新に失敗しました。" };
         }
+        return { success: false, message: "商品の更新に失敗しました。" };
     }
 }
 

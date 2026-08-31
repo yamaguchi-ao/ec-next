@@ -1,115 +1,76 @@
 "use client"
 
-// import { Button } from "@/components/ui/button";
-import { CardHeader, CardTitle, CardDescription, Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-// import { users } from "@prisma/client";
-import { ChevronLeft,  } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useActionState, useEffect,  } from "react";
-import { toast } from "@/components/ui/toast";
-import { cartUpsert } from "@/app/features/carts/actions/cart-action";
-import { useCartCount } from "@/components/providers/cart-count-provider";
+import { useActionState, useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { toast } from "@/components/ui/toast"
+import { ChevronLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { FormState } from "@/types/types"
+import { userUpdate } from "../actions/user-action"
+import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
 
-// interface detailsProp {
-//     data?: users
-// }
+type UserProp = {
+    id: number,
+    username: string,
+    admin?: boolean
+}
 
-export default function UserDetailsForm() {
+export default function UserDetailsForm({ ...data }: UserProp) {
     const router = useRouter();
-    const { refreshCartCount } = useCartCount();
 
-    // ユーザID取得
-    // const productId = data?.id;
+    const [state, action, isPending] = useActionState<FormState | null, FormData>(
+        userUpdate,
+        null,
+    );
 
-    // 
-    const [state, addCartAction] = useActionState(cartUpsert, null);
+    const [admin, setAdmin] = useState(false);
 
     useEffect(() => {
-        if (!state) {
-            return;
-        }
-
-        toast.add({
-            type: state.success ? "success" : "error",
-            description: state.fieldErrors ? state.fieldErrors.quantity : (
-                <span className="whitespace-pre-line">
-                    {state.message.replace(/\\n/g, "\n")}
-                </span>
-            )
-        });
-
-        if (state.success) {
+        setAdmin(data?.admin ?? false);
+        if (state?.success) {
+            toast.add({ type: "success", description: state.message });
             router.push("/products/list");
         }
-
-        // カートの増減
-        const effect = async () => {
-            if (state.success) {
-                await refreshCartCount();
-            }
-        }
-        void effect();
-    }, [state, router]);
+    }, [state]);
 
     return (
-        <>
-            <div className="flex w-full h-[calc(100vh-4rem)] bg-muted">
-                <div className="flex flex-col w-full h-full p-5">
-                    <Card className="w-full h-full">
-                        <CardHeader>
-                            <div className="flex justify-between">
-                                <div className="flex items-center gap-3">
-                                    <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => router.back()}></ChevronLeft>
-                                    <div>
-                                        <CardTitle className="text-2xl">ユーザ詳細</CardTitle>
-                                        <CardDescription className="mt-1">商品の詳細を確認したり、個数選択をしてカートへの追加が行えます。</CardDescription>
-                                    </div>
-                                </div>
+        <main className="h-[calc(100vh-4rem)] bg-muted p-5">
+            <Card className="mx-auto w-full h-full">
+                <CardHeader>
+                    <div className="flex items-center gap-3">
+                        <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => router.back()}></ChevronLeft>
+                        <div>
+                            <CardTitle className="text-2xl">ユーザー詳細</CardTitle>
+                            <CardDescription>一般ユーザの管理者移行設定ができます。</CardDescription>
+                        </div>
+                    </div>
+
+                </CardHeader>
+                <CardContent>
+                    <form action={action} className="grid gap-6">
+                        <div className="grid gap-2">
+                            <Label htmlFor="username">ユーザー名</Label>
+                            <p id="username" className="rounded-md border bg-muted px-3 py-2">{data.username}</p>
+                        </div>
+                        <Input type="hidden" name="id" value={data.id} />
+                        <div className="grid gap-2">
+                            <Label htmlFor="admin">管理者に変更</Label>
+                            <div className="flex gap-3">
+                                <Switch name="admin" id="admin" checked={admin} onCheckedChange={setAdmin} />
                             </div>
-                        </CardHeader>
-                        <CardDescription className="px-6">
-                            <CardContent>
-                                <div className="flex gap-5">
-                                    <div className="flex flex-col gap-5">
-                                        <div className="bg-muted h-[calc(100vh-18rem)] w-[calc(100vh-18rem)]"></div>
-                                    </div>
-                                    <div className="flex flex-col w-full">
-                                        <form action={addCartAction}>
-
-                                            <Label className="text-3xl">ユーザ名：</Label>
-                                            <Input name="name" value={""}></Input>
-
-                                            <div className="flex gap-1">
-                                                <Label> メールアドレス：</Label>
-                                                <Input name="name" value={""}></Input>
-                                            </div>
-
-                                            <div className="flex gap-1">
-                                                <Label> 郵便番号：</Label>
-                                                <Input name="name" value={""}></Input>-<Input name="name" value={""}></Input>
-                                            </div>
-
-                                            <div className="grid gap-3 py-3">
-                                                <Label className="text-[18px]">都道府県・市町村</Label>
-                                                <Input name="name" value={""}></Input>
-                                                <Label className="text-[18px]">アパート・マンション</Label>
-                                                <Input name="name" value={""}></Input>
-                                            </div>
-
-                                            <div className="flex justify-end items-end py-3">
-                                                <Label className="text-[20px]">電話番号：</Label>
-                                                <Input name="name" value={""}></Input>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </CardDescription>
-                    </Card>
-                </div>
-            </div>
-        </>
-    );
+                        </div>
+                        {state && !state.success && state.message && (
+                            <p className="text-sm text-red-600">{state.message}</p>
+                        )}
+                        <Button type="submit" disabled={isPending}>
+                            {isPending ? "更新中..." : "更新する"}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
+        </main>
+    )
 }

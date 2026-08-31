@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Boxes, ClipboardList, PackageSearch, ShoppingCart, Users } from "lucide-react";
+import { Boxes, ClipboardList, PackageSearch, ShoppingCart, Users } from "lucide-react";
 import { getDashboardData } from "../actions/search-action";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,21 +27,33 @@ export default async function DashBoardForm() {
                         <p className="text-muted-foreground">ショップの状況を確認できます。</p>
                     </div>
                     <div className="flex gap-2">
-                        <Button nativeButton={false} variant="outline" render={<Link href="/products/list" />}>商品ページ <ArrowUpRight /></Button>
                         <Button nativeButton={false} render={<Link href="/products/management" />}>商品を管理 <PackageSearch /></Button>
                     </div>
                 </div>
 
                 <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {summary.map(({ label, value, icon: Icon }) => (
-                        <Card key={label}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardDescription>{label}</CardDescription>
-                                <Icon className="size-5 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent><p className="text-2xl font-semibold">{value}</p></CardContent>
-                        </Card>
-                    ))}
+                    {summary.map(({ label, value, icon: Icon }) => {
+                        const isUserCount = label === "会員数";
+                        const card = (
+                            <Card key={label} className={isUserCount ? "cursor-pointer transition-colors hover:bg-accent/50" : undefined}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardDescription>{label}</CardDescription>
+                                    <Icon className="size-5 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent><p className="text-2xl font-semibold">{value}</p></CardContent>
+                            </Card>
+                        );
+
+                        if (isUserCount) {
+                            return (
+                                <Link key={label} href="/users" className="block">
+                                    {card}
+                                </Link>
+                            );
+                        }
+
+                        return card;
+                    })}
                 </section>
 
                 <section className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">

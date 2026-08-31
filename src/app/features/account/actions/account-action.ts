@@ -5,11 +5,12 @@ import z from "zod"
 import { revalidatePath } from "next/cache"
 import prisma from "@/lib/prisma"
 import { requireUser } from "@/lib/jwt/auth"
+import { FormState } from "@/types/types"
 
 const addressSchema = z.object({
     postCode: z.string().trim().min(1, "郵便番号を入力してください。"),
-    prefecture: z.string().trim().min(1, "都道府県を入力してください。"),
-    apartment: z.string().trim(),
+    address1: z.string().trim().min(1, "都道府県を入力してください。"),
+    address2: z.string().trim(),
     phone: z.string().trim().min(1, "電話番号を入力してください。"),
 })
 
@@ -22,17 +23,13 @@ const passwordSchema = z.object({
     message: "パスワードが一致していません。",
 })
 
-export type AccountFormState = {
-    success: boolean
-    message: string
-    fieldErrors?: Record<string, string[] | undefined>
-}
 
-export async function updateAccount(_prevState: AccountFormState | null, formData: FormData): Promise<AccountFormState> {
+// アカウント情報の更新
+export async function updateAccount(_prevState: FormState | null, formData: FormData): Promise<FormState> {
     const data = {
         postCode: String(formData.get("postCode") ?? ""),
-        prefecture: String(formData.get("prefecture") ?? ""),
-        apartment: String(formData.get("apartment") ?? ""),
+        address1: String(formData.get("address1") ?? ""),
+        address2: String(formData.get("address2") ?? ""),
         phone: String(formData.get("phone") ?? ""),
     }
     const result = addressSchema.safeParse(data)
@@ -42,7 +39,8 @@ export async function updateAccount(_prevState: AccountFormState | null, formDat
     }
 
     try {
-        const user = await requireUser()
+        const user = await requireUser();
+
         const address = await prisma.address.findFirst({
             where: { user_id: user.id },
             orderBy: { created_at: "asc" },
@@ -52,20 +50,20 @@ export async function updateAccount(_prevState: AccountFormState | null, formDat
             await prisma.address.update({
                 where: { id: address.id },
                 data: {
-                    post_code: result.data.postCode,
-                    address1: result.data.prefecture,
-                    address2: result.data.apartment || null,
-                    phone: result.data.phone,
+                    post_code: data.postCode,
+                    address1: data.address1,
+                    address2: data.address2 || null,
+                    phone: data.phone,
                 },
             })
         } else {
             await prisma.address.create({
                 data: {
                     user_id: user.id,
-                    post_code: result.data.postCode,
-                    address1: result.data.prefecture,
-                    address2: result.data.apartment || null,
-                    phone: result.data.phone,
+                    post_code: data.postCode,
+                    address1: data.address1,
+                    address2: data.address2 || null,
+                    phone: data.phone,
                 },
             })
         }
@@ -78,7 +76,7 @@ export async function updateAccount(_prevState: AccountFormState | null, formDat
     }
 }
 
-export async function changePassword(_prevState: AccountFormState | null, formData: FormData): Promise<AccountFormState> {
+export async function changePassword(_prevState: FormState | null, formData: FormData): Promise<FormState> {
     const data = {
         currentPassword: String(formData.get("currentPassword") ?? ""),
         newPassword: String(formData.get("newPassword") ?? ""),
@@ -112,28 +110,4 @@ export async function changePassword(_prevState: AccountFormState | null, formDa
         console.error("パスワードの変更に失敗しました。", error)
         return { success: false, message: "パスワードの変更に失敗しました。" }
     }
-}
-
-export async function getAddress() {
-    try {
-        const user = await requireUser();
-        const address = await prisma.address.findFirst({
-            where: { user_id: user.id },
-            select: {
-                post_code: true,
-                address1: true,
-                address2: true,
-                phone: true
-            }
-        });
-
-        return { success: true, data: address }
-    } catch (e) {
-        if (e instanceof Error) {
-            console.log("エラー内容：", e.message);
-            return { success: false, message: e.message ? e.message : "住所の取得に失敗しました。" }
-        }
-    }
-
-
 }
