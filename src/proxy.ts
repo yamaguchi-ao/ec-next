@@ -1,32 +1,47 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { getCurrentUser } from './lib/jwt/auth';
+import { getAuthCookie } from './lib/jwt/cookie';
 
 export default async function proxy(req: NextRequest) {
+    const { pathname } = req.nextUrl;
 
-    const authToken = req.cookies.get("auth_token")?.value;
-    const loginUrl = new URL('/login', req.url);
-    const currentUrl = new URL('/products/list', req.url);
+    const publicPaths = ["/login", "/signup"];
+    const protectedPath = ["/products", "/dashboard", "/cart", "/users", "/account"];
 
-    if (!authToken) {
-        if (!req.nextUrl.pathname.includes("/login")) {
-            return NextResponse.redirect(loginUrl);
-        }
-    } else {
+    const isPublicPath = publicPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+    const isProtectedPath = protectedPath.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+    const currentUrl = new URL("/login", req.url);
+    const token = await getAuthCookie();
+
+    if (!token && isProtectedPath) {
+        currentUrl.searchParams.set("reason", "session_expired");
+        return NextResponse.redirect(currentUrl);
+    }
+
+    if (token) {
         try {
-            // jwtの署名の検証
-            const encode = new TextEncoder().encode(JWT_SECRET);
-            const result = await jwtVerify(authToken, encode);
+            const user = await getCurrentUser();
 
-            // ログインしているのにログイン画面に遷移している場合
-            if (req.nextUrl.pathname.includes("/login") || req.nextUrl.pathname.includes("/signup")) {
-                // 商品画面に自動的に遷移させる
+            if (!user) {
+                currentUrl.searchParams.set("reason", "session_expired");
                 return NextResponse.redirect(currentUrl);
             }
-        } catch (error) {
-            console.log("エラー内容：", error);
-            return NextResponse.redirect(loginUrl);
+
+
+            if (isPublicPath) {
+                return NextResponse.redirect(new URL("/products/list", req.url));
+            }
+
+            // 管理者チェック
+            if (pathname.startsWith("/dashboard") && user.admin !== true) {
+                return NextResponse.redirect(new URL("/products/list", req.url));
+            }
+        } catch {
+            if (isProtectedPath) {
+                currentUrl.searchParams.set("reason", "session_expired");
+                return NextResponse.redirect(currentUrl);
+            }
         }
     }
     return NextResponse.next();
@@ -35,8 +50,10 @@ export default async function proxy(req: NextRequest) {
 export const config = {
     matcher: [
         '/products/:path*',
-        '/users/:path*',
+        '/user/:path*',
         '/dashboard/:path*',
-        '/((?!api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/cart/:path*',
+        '/account/:path*',
+        '/((?!signup|api|_next/static|_next/image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ]
 }

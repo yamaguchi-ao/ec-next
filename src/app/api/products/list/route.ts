@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/jwt/auth";
 import prisma from "@/lib/prisma";
 import { findProduct } from "@/lib/prisma/query";
 import { Prisma } from "@prisma/client";
@@ -10,13 +10,13 @@ export async function GET(req: NextRequest) {
 
     // cookie認証
     if (!user) {
-        return NextResponse.json({ message: "認証に失敗しました。", }, { status: 400 });
+        return NextResponse.json({ message: "認証に失敗しました。", }, { status: 401 });
     }
 
     const searchParams = req.nextUrl.searchParams;
     const name = searchParams.get("name");
     const category = searchParams.get("category");
-    const page = Number(searchParams.get("page"));
+    const page = Number(searchParams.get("page")) || 1;
 
     const limit = 10;
     const offset = (page - 1) * limit;
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         const totalPage = Math.ceil(totalData / limit);
 
         if (!data) {
-            return NextResponse.json({ message: "商品が見つかりませんでした。" }, { status: 404 });
+            return NextResponse.json({ message: "商品が見つかりません。" }, { status: 404 });
         }
         return NextResponse.json({ data, totalPage, page }, { status: 200 });
     } catch (e) {

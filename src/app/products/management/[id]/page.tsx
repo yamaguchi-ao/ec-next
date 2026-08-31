@@ -2,7 +2,7 @@ import { getCategories } from "@/app/features/products/actions/category-action";
 import { getProduct } from "@/app/features/products/actions/product-action";
 import ProductDetailsForm from "@/app/features/products/components/management/details-form";
 import Header from "@/components/layout/header";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/jwt/auth";
 import { redirect } from "next/navigation";
 
 export default async function detailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,11 +12,15 @@ export default async function detailsPage({ params }: { params: Promise<{ id: st
 
     // 商品詳細用取得
     const productResult = await getProduct(id);
-    const product = productResult?.data!;
+    const product = productResult?.data;
 
     // カテゴリーの取得
     const categoryResult = await getCategories();
     const categories = categoryResult?.data ? categoryResult.data : [];
+
+    if (!user) {
+        redirect("/login");
+    }
 
     if (!adminFlg) {
         redirect("/products/list");
@@ -25,7 +29,7 @@ export default async function detailsPage({ params }: { params: Promise<{ id: st
     return (
         <>
             <title>商品詳細</title>
-            <Header username={user?.username!} admin={adminFlg} />
+            <Header id={user.id} username={user.username!} admin={adminFlg} />
             <ProductDetailsForm data={product} categories={categories} />
         </>
     );

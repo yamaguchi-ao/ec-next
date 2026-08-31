@@ -20,8 +20,9 @@ model users {
   admin      Boolean   @default(false)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
-  orders     orders[]
+  order      order[]
   address    address[]
+  cart       cart[]
 }
 
 model address {
@@ -50,6 +51,7 @@ model products {
   category    category?        @relation(fields: [categoryId], references: [id])
   categoryId  String?
   orderItems  order_items[]
+  cartItems   cart_items[]
 }
 
 // カテゴリー
@@ -69,31 +71,55 @@ model product_images {
   updated_at DateTime @updatedAt
 }
 
+// カート
+model cart {
+  id         String       @id @default(cuid())
+  user_id    Int          @unique
+  created_at DateTime     @default(now())
+  updated_at DateTime     @updatedAt
+  users      users        @relation(fields: [user_id], references: [id])
+  items      cart_items[]
+}
+
+// カートに入れた商品
+model cart_items {
+  id         String   @id @default(cuid())
+  cart_id    String
+  product_id String
+  quantity   Int      @default(1)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  products   products @relation(fields: [product_id], references: [id])
+  cart       cart     @relation(fields: [cart_id], references: [id], onDelete: Cascade)
+
+  @@unique([cart_id, product_id])
+}
+
 // 注文
-model orders {
+model order {
   id           String        @id @default(cuid())
+  user_id      Int
   total_price  Int
   shipping_fee Int
   tax          Int
-  discount     Int
-  order_status order_status
-  users        users         @relation(fields: [user_id], references: [id])
-  user_id      Int
+  order_status order_status  @default(PENDING)
   created_at   DateTime      @default(now())
   updated_at   DateTime      @updatedAt
-  orderItems   order_items[]
+  users        users         @relation(fields: [user_id], references: [id])
+  items        order_items[]
 }
 
 // 注文商品
 model order_items {
   id         String   @id @default(cuid())
   order_id   String
-  orders     orders   @relation(fields: [order_id], references: [id])
   product_id String
-  products   products @relation(fields: [product_id], references: [id])
+  price      Int
   quantity   Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  order      order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  products   products @relation(fields: [product_id], references: [id])
 }
 
 enum order_status {

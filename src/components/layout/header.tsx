@@ -1,17 +1,19 @@
 "use client";
 
 import { logoutAction } from "@/app/features/auth/actions/logout-action";
-import { Button } from "../ui/button";
 import { UserType } from "@/types/types";
 import { redirect, useRouter } from "next/navigation";
 import { toast } from "../ui/toast";
-import { CircleUser, LogOut, MapPin, ShoppingCart } from "lucide-react";
+import { CircleUser, KeyRound, LogOut, MapPin, ShoppingCart, UserRoundPen } from "lucide-react";
 import Image from "next/image";
 import logo from "@/public/ecsite-title.png";
+import { useCartCount } from "../providers/cart-count-provider";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
-export default function Header({ username, admin }: UserType) {
+export default function Header({ username, admin, address }: UserType) {
 
     const router = useRouter();
+    const { cartItemsCount } = useCartCount();
 
     async function handleLogout() {
         const result = await logoutAction();
@@ -42,8 +44,8 @@ export default function Header({ username, admin }: UserType) {
                                     <p>お届け先</p>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <p>〒001-0000</p>{/* ここはのちに取得した値を入れる*/}
-                                    <p>東京都千代田区</p>{/* ここはのちに取得した値を入れる*/}
+                                    <p>〒{address?.postCode}</p>
+                                    <p>{address?.address1}</p>
                                 </div>
                             </div>
                         </>)}
@@ -53,12 +55,38 @@ export default function Header({ username, admin }: UserType) {
                         <p className="text-[12px]">こんにちは</p>
                         <p className="text-[18px]">{username}さん</p>
                     </div>
-                    <ShoppingCart className="invert size-8 hover:cursor-pointer" />
-                    <CircleUser className="invert size-8" />
-                    <Button onClick={handleLogout}>
-                        ログアウト
-                        <LogOut className="ml-2 h-4 w-4" />
-                    </Button>
+                    <div className="relative">
+                        {admin === false ? (<ShoppingCart className="invert size-8 hover:cursor-pointer" onClick={() => router.push("/cart")} />) : null}
+                        {cartItemsCount > 0 && (
+                            <span className="absolute top-0 right-0 flex min-w-4 origin-center translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-destructive px-1 text-white text-xs">
+                                {cartItemsCount}
+                            </span>
+                        )}
+                    </div>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            aria-label="アカウントメニューを開く"
+                            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-white">
+                            <CircleUser className="invert size-8" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            {!admin && (
+                                <DropdownMenuItem onClick={() => router.push("/account")}>
+                                    <UserRoundPen />
+                                    アカウント情報
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => router.push("/account/password")}>
+                                <KeyRound />
+                                パスワード変更
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleLogout}>
+                                <LogOut />
+                                ログアウト
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </header>

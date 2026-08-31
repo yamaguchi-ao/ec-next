@@ -1,8 +1,9 @@
 "use client"
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontalIcon, Pencil, Trash2 } from "lucide-react";
+import { LucideArchiveX, MoreHorizontalIcon, SquarePen } from "lucide-react";
 import RegisterSheet from "./sheet";
 import { managementTitle } from "@/types/products";
 import { useRouter } from "next/navigation";
@@ -10,7 +11,7 @@ import { toast } from "@/components/ui/toast";
 import { productDelete } from "../../actions/product-action";
 import { productsData } from "./management-form";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 
 export default function ListTable() {
@@ -36,7 +37,7 @@ export default function ListTable() {
             router.refresh();
         }
         toast.add({
-            type: result.success ? "success" : "error",
+            type: result?.success ? "success" : "error",
             description: result?.message
         });
     }
@@ -50,13 +51,13 @@ export default function ListTable() {
 
     return (
         <>
-            <ScrollArea className="h-[calc(100vh-18rem)] rounded-lg border">
+            <ScrollArea className="h-[calc(100vh-21rem)] rounded-lg border bg-background">
                 <Table>
-                    <TableHeader className="bg-chart-4 pointer-events-none">
-                        <TableRow className="text-[20px]">
+                    <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
+                        <TableRow>
                             {headerMap?.map((item, index) => {
                                 return (
-                                    <TableHead key={index} className={`text-white text-center ${item.value === "商品名" && "w-80"}`}>{item.value}</TableHead>
+                                    <TableHead key={index} className={`text-center ${item.value === "商品名" && "min-w-64"}`}>{item.value}</TableHead>
                                 );
                             })}
                         </TableRow>
@@ -64,13 +65,22 @@ export default function ListTable() {
                     <TableBody className="">
                         {products && products.map((item, idx) => {
                             return (
-                                <TableRow key={idx} className={`text-[18px] ${idx % 2 !== 0 ? "bg-chart-2/20 hover:bg-chart-2/30" : "hover:bg-muted"}`}>
-                                    <TableCell className="text-center border-r border-border">{item.name}</TableCell>
-                                    <TableCell className="text-center border-r border-border">{item.category?.name}</TableCell>
-                                    <TableCell className="text-right border-r border-border">¥ {item.price?.toLocaleString("ja-JP")}</TableCell>
-                                    <TableCell className="text-right border-r border-border">{item.count?.toLocaleString("ja-JP")}</TableCell>
-                                    <TableCell className="text-center border-r border-border">{item.is_on_sale ? "販売中" : "未発売"}</TableCell>
-                                    <TableCell className="text-center w-25">
+                                <TableRow key={idx} className="group">
+                                    <TableCell className="font-medium">{item.name}</TableCell>
+                                    <TableCell className="text-muted-foreground">{item.category?.name ?? "未分類"}</TableCell>
+                                    <TableCell className="text-right tabular-nums">¥ {item.price?.toLocaleString("ja-JP")}</TableCell>
+                                    <TableCell className={`text-right tabular-nums ${item.count !== undefined && item.count <= 5 ? "font-semibold text-destructive" : ""}`}>{item.count?.toLocaleString("ja-JP")}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge
+                                            variant="outline"
+                                            className={item.is_on_sale
+                                                ? "border-green-200 bg-green-100 text-green-800"
+                                                : "border-gray-200 bg-gray-100 text-gray-600"}
+                                        >
+                                            {item.is_on_sale ? "販売中" : "販売停止"}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="w-25 text-center">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger render={
                                                 <Button variant="ghost" size="icon" className="size-8">
@@ -78,12 +88,12 @@ export default function ListTable() {
                                                     <span className="sr-only">Open menu</span></Button>} />
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem className="hover:cursor-pointer" onClick={() => handleEdit(item.id!)}>
-                                                    <Pencil />
+                                                    <SquarePen />
                                                     編集
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator className="bg-gray-400/30" />
                                                 <DropdownMenuItem className="hover:cursor-pointer" variant="destructive" onClick={(event) => handleOpenDialog(item.id!, event)}>
-                                                    <Trash2 />削除
+                                                    <LucideArchiveX />販売停止
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -91,10 +101,10 @@ export default function ListTable() {
                                             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                                                 <DialogContent>
                                                     <DialogHeader>
-                                                        <DialogTitle>商品の削除</DialogTitle>
+                                                        <DialogTitle>商品の販売停止</DialogTitle>
                                                     </DialogHeader>
                                                     <DialogDescription>
-                                                        商品の削除を行います。本当に削除していいですか？
+                                                        商品の販売停止を行います。本当に削除していいですか？
                                                     </DialogDescription>
                                                     <DialogFooter>
                                                         <DialogClose render={<Button variant="outline" onClick={() => { setIsDialogOpen(false) }}>いいえ</Button>} />
@@ -111,8 +121,10 @@ export default function ListTable() {
                                 </TableRow>
                             )
                         })}
-                        {/* 新規登録用 */}
-                        <TableRow>
+                        {products.length === 0 && <TableRow>
+                            <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">該当する商品がありません。</TableCell>
+                        </TableRow>}
+                        <TableRow className="bg-muted/30">
                             <TableCell className="-p-2 h-10" colSpan={6}>
                                 <RegisterSheet />
                             </TableCell>

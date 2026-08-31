@@ -1,15 +1,14 @@
 "use server"
-import { cookies } from "next/headers"
+import { deleteAuthCookie, getAuthCookie } from "@/lib/jwt/cookie";
 
 export async function logoutAction() {
 
-    const cookie = await cookies();
-    const hasToken = cookie.has("auth_token");
+    const token = await getAuthCookie();
 
     try {
 
-        if (hasToken) {
-            cookie.delete("auth_token");
+        if (token) {
+            await deleteAuthCookie();
             return { success: true, message: 'ログアウトしました。' }
         } else {
             return { success: false, message: 'ログアウトに失敗しました。' }

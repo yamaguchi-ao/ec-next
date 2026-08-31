@@ -2,10 +2,10 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProductType } from "@/types/types";
-import { useRouter } from "next/navigation";
-import { useEffect, useState, } from "react";
+import { redirect, useRouter } from "next/navigation";
+import { useActionState, useEffect, useState, } from "react";
 import { toast } from "@/components/ui/toast";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { ChevronRight, Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiClient } from "@/lib/axios";
+import { cartUpsert } from "@/app/features/carts/actions/cart-action";
+import { useCartCount } from "@/components/providers/cart-count-provider";
 
 type searchProp = {
     name?: string,
@@ -24,6 +26,7 @@ type searchProp = {
 
 export default function ProductListForm({ category }: { category: category[] }) {
     const router = useRouter();
+    const { refreshCartCount } = useCartCount();
 
     // 商品を取得する
     const [data, setData] = useState<ProductType[]>([]);
@@ -40,29 +43,54 @@ export default function ProductListForm({ category }: { category: category[] }) 
     // 選択したカテゴリー
     const [selectedCategory, setSelectedCategory] = useState("");
 
+    // カート追加
+    const [state, addCartAction] = useActionState(cartUpsert, null);
+
     useEffect(() => {
         setCategories(category);
         search();
-    }, [selectedCategory]);
+        if (!state) {
+            return
+        }
+        toast.add({
+            type: state.success ? "success" : "error",
+            description: state.fieldErrors ? state.fieldErrors.quantity : (
+                <span className="whitespace-pre-line">
+                    {state.message.replace(/\\n/g, "\n")}
+                </span>
+            )
+        });
+        // カートの増減
+        const effect = async () => {
+            if (state.success) {
+                await refreshCartCount();
+            }
+        }
+        void effect();
+    }, [selectedCategory, state]);
 
     // 検索
     async function search({ name = phrase, category = selectedCategory, page = 1 }: searchProp = {}) {
         const url = `/products/list/?name=${name ? name : ""}&category=${category ? category : ""}&page=${page ? page : 1}`;
-        const result = await apiClient.get(url, {
+        await apiClient.get(url, {
             method: "GET",
             withCredentials: true,
-        });
-        if (result.data) {
-            setCurrentPage(result.data.page);
-            setTotalPage(result.data.totalPage);
-            setData(result?.data.data);
-            router.refresh();
-        } else {
+        }).then(response => {
+            if (response.data) {
+                setCurrentPage(response.data.page);
+                setTotalPage(response.data.totalPage);
+                setData(response.data.data);
+                router.refresh();
+            }
+        }).catch(error => {
             toast.add({
                 type: "error",
-                description: result.data.message
+                description: error.response.data.message
             });
-        }
+            if (error.response.status === 500) {
+                redirect("/login");
+            }
+        })
     }
 
     // ページ数
@@ -96,7 +124,10 @@ export default function ProductListForm({ category }: { category: category[] }) 
                     <CardHeader>
                         <div className="flex justify-between">
                             <div className="flex items-center gap-3">
-                                <CardTitle className="text-3xl">商品一覧</CardTitle>
+                                <div>
+                                    <CardTitle className="text-2xl">商品一覧</CardTitle>
+                                    <CardDescription className="mt-1">商品の一部を確認したり、検索で特定の商品の閲覧が行えます。</CardDescription>
+                                </div>
                             </div>
                             <ButtonGroup>
                                 <Input className="bg-white text-black border border-gray-300 py-2 px-4 w-100" value={phrase} onChange={(e) => setPhrase(e.target.value)} placeholder="検索..." />
@@ -112,9 +143,9 @@ export default function ProductListForm({ category }: { category: category[] }) 
                             <Separator orientation="horizontal" className="my-2 bg-gray-200" />
                             <ScrollArea className="h-full">
                                 {categories.map((category, index) => (
-                                    <div className={`flex items-center w-full px-5 py-2 gap-2 ${selectedCategory === category.name ? "bg-muted" : ""}`} key={index} >
+                                    <div className={`flex items-center w-full px-5 py-2 gap-2 hover:cursor-pointer ${selectedCategory === category.name ? "bg-muted" : ""}`} key={index} onClick={() => handleSelectCategory(category.name)}>
                                         {selectedCategory === category.name ? <ChevronRight className="size-4" /> : null}
-                                        <p className="hover:cursor-pointer" onClick={() => handleSelectCategory(category.name)}>{category.name}</p>
+                                        <p >{category.name}</p>
                                     </div>
                                 ))}
                             </ScrollArea>
@@ -130,20 +161,26 @@ export default function ProductListForm({ category }: { category: category[] }) 
                                     <Carousel className="w-full max-w-[calc(100vh+11rem)] ">
                                         <CarouselContent className="-ml-1">
                                             {data.map((item, index) => (
-                                                <CarouselItem key={index} className="basis-1/2 pl-1" onClick={() => router.push(`/products/list/${item.id}`)}>
+                                                <CarouselItem key={index} className="basis-1/2 pl-1">
                                                     <div className="p-1 w-[calc(50vh+5.5rem)] h-[calc(100vh-20rem)]">
                                                         <Card className="h-full">
                                                             <CardContent className="h-full">
-                                                                <div className="w-full text-2xl font-semibold truncate"><span>{item.name}</span></div>
-                                                                <div className="w-full h-45 bg-muted py-1"></div>
-                                                                <div className="w-full py-1">
-                                                                    <div className="w-full">
-                                                                        <div className="flex items-end justify-end py-2 gap-1">
-                                                                            <p className="text-[18px]">¥</p><span className="text-3xl">{item.price?.toLocaleString()}</span>
+                                                                <div className="cursor-pointer" onClick={() => router.push(`/products/list/${item.id}`)}>
+                                                                    <div className="w-full text-2xl font-semibold truncate"><span>{item.name}</span></div>
+                                                                    <div className="w-full h-45 bg-muted py-1"></div>
+                                                                    <div className="w-full py-1">
+                                                                        <div className="w-full">
+                                                                            <div className="flex items-end justify-end py-2 gap-1">
+                                                                                <p className="text-[18px]">¥</p><span className="text-3xl">{item.price?.toLocaleString()}</span>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <Button className="w-full">カートに入れる</Button>
+                                                                <form action={addCartAction}>
+                                                                    <Input type="hidden" name="productId" value={item.id} />
+                                                                    <Input type="hidden" name="quantity" value="1" />
+                                                                    <Button type="submit" className="w-full" onClick={(event) => event.stopPropagation()}>カートに入れる</Button>
+                                                                </form>
                                                             </CardContent>
                                                         </Card>
                                                     </div>

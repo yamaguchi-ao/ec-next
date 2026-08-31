@@ -9,3 +9,10 @@ export enum managementTitle {
     OTHER = "その他"
 }
 
+// ユーザ管理のTBLタイトル
+export enum userTitle {
+    NAME = "ユーザー名",
+    email = "メールアドレス",
+    ADMIN = "区分",
+    OTHER = "その他"
+}

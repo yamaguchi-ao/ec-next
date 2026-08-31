@@ -14,17 +14,23 @@ import { redirect, useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { productUpdate } from "../../actions/product-action";
 import { toast } from "@/components/ui/toast";
+import { FormState } from "@/types/types";
 
 interface detailsProp {
-    data: products
+    data?: products
     categories: category[]
 }
 
 export default function ProductDetailsForm({ data, categories }: detailsProp) {
     const router = useRouter();
 
-    // 商品ID取得
-    const productId = data.id;
+    if (!data) {
+        toast.add({
+            type: "error",
+            description: "商品が見つかりませんでした。"
+        });
+        redirect("/products/management");
+    }
 
     // 販売状態のステータス用
     const [status, setStatus] = useState(false);
@@ -32,26 +38,33 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
     // カテゴリー用
     const [selectCategory, setSelectCategory] = useState<string | null>(null);
 
-    useEffect(() => {
-        setStatus(data.is_on_sale);
-        setSelectCategory(data.categoryId ?? "");
-    }, []);
+    const [state, updateAction] = useActionState<FormState | null, FormData>(
+        productUpdate,
+        null,
+    );
 
-    const [state, updateAction, pending] = useActionState(
-        async (prevState: any, formData: FormData) => {
-            const result = await productUpdate(prevState, formData, productId);
-            if (result?.fieldErrors) {
-                return result?.fieldErrors
-            } else {
-                toast.add({
-                    type: result?.success ? "success" : "error",
-                    description: result?.message
-                });
-                if (result.success) {
-                    redirect("/products/management");
-                }
+    const [formData, setFormData] = useState({
+        name: data?.name ?? "",
+        price: data?.price ?? "",
+        count: data?.count ?? "",
+        description: data?.description
+    });
+
+    useEffect(() => {
+        setStatus(data?.is_on_sale ?? false);
+        setSelectCategory(data?.categoryId ?? "");
+        setFormData(data);
+        if (state) {
+            toast.add({
+                type: state.success ? "success" : "error",
+                description: state.message,
+            });
+
+            if (state.success) {
+                router.push("/products/management");
             }
-        }, null);
+        }
+    }, [data, state, router]);
 
     // shadcn/uiのselectで必要
     const selectCategories = categories.map((category) => ({
@@ -60,13 +73,15 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
     }));
 
     // バリデーションメッセージ表示
-    const errorText = (data: string[]) => {
-        const list = [];
-        for (let i = 0; i < data.length; i++) {
-            list.push(<p key={i} className="pt-1 text-[12px] text-red-600">{data[i]}</p>)
-        }
+    const showError = (field: string) => {
+        const errors = state?.fieldErrors?.[field]
+        return errors?.map((error) => (
+            <p key={error} className="text-xs text-red-600">{error}</p>
+        ));
+    }
 
-        return list;
+    const handleChange = (field: keyof typeof formData, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }))
     }
 
     return (
@@ -78,7 +93,10 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                             <div className="flex justify-between">
                                 <div className="flex items-center gap-3">
                                     <ChevronLeft className="size-10 text-chart-4 hover:cursor-pointer" onClick={() => router.back()}></ChevronLeft>
-                                    <CardTitle className="text-3xl">商品詳細</CardTitle>
+                                    <div>
+                                        <CardTitle className="text-2xl">商品詳細</CardTitle>
+                                        <CardDescription className="mt-1">商品の編集を行い、価格やカテゴリー、在庫数などの商品情報を管理します。</CardDescription>
+                                    </div>
                                 </div>
                             </div>
                         </CardHeader>
@@ -89,14 +107,15 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                         <div className="bg-muted h-[calc(100vh-24rem)] w-[calc(100vh-24rem)]"></div>
                                         <Button>ファイル選択</Button>
                                     </div>
+                                    <Input type="hidden" name="id" value={data?.id} />
                                     <div className="flex flex-col w-full">
                                         <div className="flex gap-3 py-3">
                                             <FieldGroup>
                                                 <Field>
                                                     <div className="grid gap-3">
                                                         <Label htmlFor="name">商品名<p className="text-red-500">*</p></Label>
-                                                        <Input name="name" id="name" defaultValue={data.name} />
-                                                        <FieldError>{state?.name && errorText(state?.name)}</FieldError>
+                                                        <Input name="name" id="name" value={formData.name} onChange={(e) => handleChange("name", e.target.value)} />
+                                                        <FieldError>{showError("name")}</FieldError>
                                                     </div>
                                                 </Field>
                                             </FieldGroup>
@@ -118,7 +137,7 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                                                 </SelectGroup>
                                                             </SelectContent>
                                                         </Select>
-                                                        <FieldError>{state?.selectCategory && errorText(state?.selectCategory)}</FieldError>
+                                                        <FieldError>{showError("category")}</FieldError>
                                                     </div>
                                                 </Field>
                                             </FieldGroup>
@@ -128,8 +147,8 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                                 <Field>
                                                     <div className="grid gap-3">
                                                         <Label htmlFor="price">価格<p className="text-red-500">*</p></Label>
-                                                        <Input name="price" id="price" defaultValue={data.price} />
-                                                        <FieldError>{state?.price && errorText(state?.price)}</FieldError>
+                                                        <Input name="price" id="price" value={formData.price} onChange={(e) => handleChange("price", e.target.value)} />
+                                                        <FieldError>{showError("price")}</FieldError>
                                                     </div>
                                                 </Field>
                                             </FieldGroup>
@@ -137,8 +156,8 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                                 <Field>
                                                     <div className="grid gap-3">
                                                         <Label htmlFor="count">在庫数<p className="text-red-500">*</p></Label>
-                                                        <Input name="count" id="count" defaultValue={data.count} />
-                                                        <FieldError>{state?.count && errorText(state?.count)}</FieldError>
+                                                        <Input name="count" id="count" value={formData.count} onChange={(e) => handleChange("count", e.target.value)} />
+                                                        <FieldError>{showError("count")}</FieldError>
                                                     </div>
                                                 </Field>
                                             </FieldGroup>
@@ -158,7 +177,7 @@ export default function ProductDetailsForm({ data, categories }: detailsProp) {
                                             <Field>
                                                 <div className="grid gap-3 py-3">
                                                     <Label htmlFor="description">商品説明<p className="text-[11px] text-black/40">※任意</p></Label>
-                                                    <Textarea className="h-30 resize-none" name="description" id="description" defaultValue={data.description!} onChange={(e) => e.target.value} />
+                                                    <Textarea className="h-30 resize-none" name="description" id="description" value={formData?.description ?? ""} onChange={(e) => handleChange("description", e.target.value)} />
                                                 </div>
                                             </Field>
                                         </FieldGroup>
